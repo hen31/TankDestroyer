@@ -14,4 +14,5 @@ public interface ITurnContext
     public void MoveTank(Direction direction);
     public void RotateTurret(TurretDirection direction);
     void Fire();
+    void Say(string message);
 }

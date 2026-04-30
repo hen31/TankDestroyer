@@ -20,7 +20,7 @@ public class PlayerTurnContext : ITurnContext
     public ITile GetTile(int y, int x) => World.GetTile(y, x);
     public int GetMapWidth() => World.Width;
 
-    public int GetMapHeight()=> World.Height;
+    public int GetMapHeight() => World.Height;
 
     public ITank[] GetTanks() => _game.Tanks.ToArray<ITank>();
 
@@ -43,5 +43,10 @@ public class PlayerTurnContext : ITurnContext
     public void Fire()
     {
         _turnActions.Add(new FireAction(_player.Id));
+    }
+
+    public void Say(string message)
+    {
+        _turnActions.Add(new SayAction(_player.Id, message));
     }
 }

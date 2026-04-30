@@ -42,22 +42,22 @@ public class ConsoleRenderer
 
                 var bullet = turn.Bullets.FirstOrDefault(b =>
                    (!b.Destroyed && b.X == x &&
-                    b.Y == y)|| (b.Destroyed && b.EndedAtX == x && b.EndedAtY == y));
+                    b.Y == y) || (b.Destroyed && b.EndedAtX == x && b.EndedAtY == y));
                 if (bullet != null)
                 {
-                    if(bullet.Explode)
+                    if (bullet.Explode)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                     }
-                    else if( bullet.Destroyed)
+                    else if (bullet.Destroyed)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;    
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
                     }
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                     }
-            
+
                     Console.Write("* ");
                     continue;
                 }
@@ -86,6 +86,20 @@ public class ConsoleRenderer
             Console.ResetColor();
             Console.WriteLine($": {tank.Health} HP{(tank.Destroyed ? " (destroyed)" : string.Empty)}");
         }
+        Console.WriteLine("Chat:");
+        foreach (var message in world.Messages.Take(5))
+        {
+            var label = playerLabels.TryGetValue(message.OwnerId, out var playerName)
+                ? playerName
+                : $"Player {message.OwnerId}";
+
+            Console.ForegroundColor = playerColors.TryGetValue(message.OwnerId, out var color)
+                ? color
+                : ConsoleColor.Gray;
+
+            Console.WriteLine($"- {label}: {message.Text}");
+        }
+        Console.ResetColor();
     }
 
     private void RenderTile(TileType type)

@@ -11,6 +11,7 @@ public class World : IWorld
     public int Height { get; set; }
 
     public Vector2[] SpawnPoints { get; set; } = Array.Empty<Vector2>();
+    public List<Message> Messages { get; set; } = [];
 
     public ITile GetTile(int x, int y)
     {
@@ -77,7 +78,8 @@ public class World : IWorld
                 var number = numbers[x];
                 tiles.Add(new Tile()
                 {
-                    X = x, Y = y - 1,
+                    X = x,
+                    Y = y - 1,
                     TileType = (TileType)int.Parse(number)
                 });
             }
