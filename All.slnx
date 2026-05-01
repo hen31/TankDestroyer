@@ -6,6 +6,9 @@
     <Project Path="Bots/HDJO.Bot/HDJO.Bot.csproj">
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
+    <Project Path="Bots/PillenPower.Bot/PillenPower.Bot.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
   </Folder>
   <Folder Name="/Game/">
     <Project Path="Game/TankDestroyer.csproj">
