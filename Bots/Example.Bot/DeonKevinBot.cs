@@ -30,20 +30,36 @@ public class DeonKevinBot : IPlayerBot
 
     private TurretDirection? GetTurretRotation(ITank ourTank, Direction? movementDirection, ITank target)
     {
-        var nextPos = GetNextPosition(ourTank, movementDirection ?? Direction.North);
+        if (target == null) return null;
 
-        var xDiff = nextPos.X - target.X;
-        var yDiff = nextPos.Y - target.Y;
+        var xDiff = target.X - ourTank.X;
+        var yDiff = target.Y - ourTank.Y;
 
-        if (Math.Abs(xDiff) > Math.Abs(yDiff))
+        var absDiffX = Math.Abs(xDiff);
+        var absDiffY = Math.Abs(yDiff);
+
+        if (absDiffX > absDiffY * 2)
         {
-            return xDiff < 0 ? TurretDirection.West : TurretDirection.East;
+            return xDiff < 0 ? TurretDirection.East : TurretDirection.West;
         }
-        else
+        else if (absDiffY > absDiffX * 2)
         {
-            return yDiff < 0 ? TurretDirection.North : TurretDirection.South;
+            return yDiff > 0 ? TurretDirection.North : TurretDirection.South;
         }
 
+        TurretDirection direction = 0;
+
+        if (xDiff < 0)
+            direction |= TurretDirection.East;
+        else if (xDiff > 0)
+            direction |= TurretDirection.West;
+
+        if (yDiff > 0)
+            direction |= TurretDirection.North;
+        else if (yDiff < 0)
+            direction |= TurretDirection.South;
+
+        return direction == 0 ? null : direction;
     }
 
     public ITank? GetClosestTank(ITank[] tanks, ITank ourTank)
