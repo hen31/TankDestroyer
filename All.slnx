@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/Bots/">
+    <Project Path="Bots/ANSU.Bot/ANSU.Bot.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
     <Project Path="Bots/Example.Bot/Example.Bot.csproj">
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
