@@ -15,11 +15,11 @@ public interface ITank
 public enum Direction
 {
     /// <summary>
-    /// Y + 1
+    /// Y - 1
     /// </summary>
     North = 0,
     /// <summary>
-    /// X - 1
+    /// X + 1
     /// </summary>
     East = 1,
     /// <summary>
@@ -27,7 +27,7 @@ public enum Direction
     /// </summary>
     South = 2,
     /// <summary>
-    /// X + 1
+    /// X - 1
     /// </summary>
     West = 4,
 }

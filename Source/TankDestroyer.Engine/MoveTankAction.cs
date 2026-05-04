@@ -23,19 +23,6 @@ public class MoveTankAction : TankAction
         switch (_moveDirection)
         {
             case Direction.North:
-                if (tank.Y == game.World.Height - 1)
-                {
-                    return false;
-                }
-
-                if (!IsPassable(tank.X, tank.Y + 1, game))
-                {
-                    return false;
-                }
-
-                tank.Y += 1;
-                return true;
-            case Direction.South:
                 if (tank.Y == 0)
                 {
                     return false;
@@ -48,20 +35,21 @@ public class MoveTankAction : TankAction
 
                 tank.Y -= 1;
                 return true;
-            case Direction.East:
-                if (tank.X == 0)
+            case Direction.South:
+                if (tank.Y == game.World.Height - 1)
                 {
                     return false;
                 }
 
-                if (!IsPassable(tank.X - 1, tank.Y, game))
+                if (!IsPassable(tank.X, tank.Y + 1, game))
                 {
                     return false;
                 }
 
-                tank.X -= 1;
+
+                tank.Y += 1;
                 return true;
-            case Direction.West:
+            case Direction.East:
                 if (tank.X == game.World.Width - 1)
                 {
                     return false;
@@ -74,6 +62,19 @@ public class MoveTankAction : TankAction
 
                 tank.X += 1;
                 return true;
+            case Direction.West:
+                if (tank.X == 0)
+                {
+                    return false;
+                }
+
+                if (!IsPassable(tank.X - 1, tank.Y, game))
+                {
+                    return false;
+                }
+
+                tank.X -= 1;
+                return true;
             default:
                 return false;
         }
@@ -81,7 +82,7 @@ public class MoveTankAction : TankAction
 
     private bool IsPassable(int tankX, int tankY, Game game)
     {
-        if (game.Tanks.Any(c => c.X == tankX && c.Y == tankY) 
+        if (game.Tanks.Any(c => c.X == tankX && c.Y == tankY)
             || game.World.GetTile(tankX, tankY).TileType == TileType.Water)
         {
             return false;

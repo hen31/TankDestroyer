@@ -9,10 +9,10 @@ public static class DirectionExtensions
     {
         return direction switch
         {
-            Direction.North => LiomDirection.South,
-            Direction.East => LiomDirection.West,
-            Direction.South => LiomDirection.North,
-            Direction.West => LiomDirection.East,
+            Direction.North => LiomDirection.North,
+            Direction.East => LiomDirection.East,
+            Direction.South => LiomDirection.South,
+            Direction.West => LiomDirection.West,
             _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
         };
     }
@@ -37,10 +37,10 @@ public static class DirectionExtensions
     {
         return direction switch
         {
-            LiomDirection.South => Direction.North,
-            LiomDirection.West => Direction.East,
-            LiomDirection.North => Direction.South,
-            LiomDirection.East => Direction.West,
+            LiomDirection.South => Direction.South,
+            LiomDirection.West => Direction.West,
+            LiomDirection.North => Direction.North,
+            LiomDirection.East => Direction.East,
             _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
         };
     }

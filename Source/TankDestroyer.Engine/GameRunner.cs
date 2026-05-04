@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Reflection;
 using TankDestroyer.API;
+using TankDestroyer.Engine.Extensions;
 
 namespace TankDestroyer.Engine;
 
@@ -80,27 +81,7 @@ public class GameRunner
 
     private void ProcessBullet(Bullet bullet)
     {
-        var direction = new Vector2(0, 0);
-        if (bullet.Direction.HasFlag(TurretDirection.North))
-        {
-            direction += new Vector2(0, 1);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.South))
-        {
-            direction += new Vector2(0, -1);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.West))
-        {
-            direction += new Vector2(1, 0);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.East))
-        {
-            direction += new Vector2(-1, 0);
-        }
-
+        var direction = bullet.GetVector();
         var normalized = Vector2.Normalize(direction);
         var movement = normalized * 5f;
         for (int i = 0; i <= 6; i++)
