@@ -22,8 +22,7 @@ public record NewPosition
 
         MoveTo = moveTo;
         X = basePosition.X + MoveTo switch
-        {
-            // note that East and West are flipped :(
+        { // note that East and West are flipped :(
             Direction.West => -1,
             Direction.East =>  1,
             _ => 0
@@ -35,4 +34,18 @@ public record NewPosition
             _ => 0
         };
     }
+
+    public static bool PositionExists((int Y, int X) basePosition, Direction direction)
+        => basePosition.X + direction switch
+        { // note that East and West are flipped :(
+            Direction.West => -1,
+            Direction.East =>  1,
+            _ => 0
+        } >= 0
+        && basePosition.Y + direction switch
+        {
+            Direction.South => -1,
+            Direction.North =>  1,
+            _ => 0
+        } >= 0;
 }

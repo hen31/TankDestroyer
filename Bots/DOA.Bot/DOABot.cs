@@ -18,15 +18,19 @@ public class DOABot : IPlayerBot
         var currentPosition = (context.Tank.Y, context.Tank.X);
 
         // 1. Start with all possible (new) positions
-        var possiblePositions = new NewPosition[]
+        var possiblePositions = new List<NewPosition>()
         {
-            new(currentPosition,  Direction.North),
-            new(currentPosition,  Direction.East),
-            new(currentPosition,  Direction.South),
             new(currentPosition), // Do Not Move 
-            new(currentPosition,  Direction.West),
-        } // do not forget to avoid water
-        .Where(newPosition => context.GetTile(newPosition.Y, newPosition.X).TileType != TileType.Water);
+        };
+        foreach (var direction in Enum.GetValues<Direction>())
+        {
+            if (NewPosition.PositionExists(currentPosition, direction))
+            {
+                possiblePositions.Add(new NewPosition(currentPosition,  direction));
+            }
+        }
+        possiblePositions = [.. possiblePositions // do not forget to avoid water
+            .Where(newPosition => context.GetTile(newPosition.Y, newPosition.X).TileType != TileType.Water)];
 
         // 2. Calculate the possible damage at every possible position        
         foreach (var possiblePosition in possiblePositions)
