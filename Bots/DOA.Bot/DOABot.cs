@@ -53,16 +53,15 @@ public class DOABot : IPlayerBot
 
         // 3. Get the positions where we will receive minimal damage
         var minimalDamage = possiblePositions.Min(possiblePosition => possiblePosition.Damage);
-        var safeDirections = possiblePositions
+        var safestPositions = possiblePositions
             .Where(possiblePosition => possiblePosition.Damage == minimalDamage)
-            .Select(possiblePosition => possiblePosition.MoveTo)
             .ToArray();
 
         // 4. Determine the new position and move if needed
-        var moveTo = safeDirections[_random.Next(0, safeDirections.Length)];
-        if (moveTo.HasValue)
+        var newPosition = FindBestSpot(safestPositions, context);
+        if (newPosition.MoveTo.HasValue)
         {
-            context.MoveTank(moveTo.Value);
+            context.MoveTank(newPosition.MoveTo.Value);
         }
     }
 
@@ -123,6 +122,10 @@ public class DOABot : IPlayerBot
         };
 
         return direction == Opposite(bullet.Direction);
+    }
+
+    private NewPosition FindBestSpot(NewPosition[] possiblePositions, ITurnContext context)
+    {
     }
 
     private static TurretDirection Opposite(TurretDirection direction) => direction switch
