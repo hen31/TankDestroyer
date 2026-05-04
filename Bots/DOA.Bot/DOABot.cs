@@ -63,7 +63,7 @@ public class DOABot : IPlayerBot
         }
     }
 
-    private TurretDirection Aim(ITurnContext context)
+    private static TurretDirection Aim(ITurnContext context)
     {
         var currentPosition = (context.Tank.Y, context.Tank.X);
 
@@ -84,10 +84,22 @@ public class DOABot : IPlayerBot
         }
 
         // 2. Find our preferred target
-        var minimalDistance = possibleTargets.Min(possibleTarget => possibleTarget.Distance);
+        var killShotTarget = possibleTargets
+            .Where(possibleTarget => possibleTarget.Distance <= 6
+                                  && possibleTarget.Directions.Length == 1)
+            .OrderBy(possibleTarget => possibleTarget.Tank.Health)
+            .FirstOrDefault();
+ 
+        if (killShotTarget is not null)
+        {
+            return killShotTarget.Directions.First();
+        }
+
         return possibleTargets
-            .First(possibleTarget => possibleTarget.Distance == minimalDistance)
-            .Direction;
+            .OrderBy(possibleTarget => possibleTarget.Distance)
+            .First()
+            .Directions
+            .First();
     }
 
     private void AimAndFire(ITurnContext context)
