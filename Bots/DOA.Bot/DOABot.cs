@@ -107,15 +107,15 @@ public class DOABot : IPlayerBot
         var angleInDegrees = (Math.Atan2(diffY, diffX) * 180 / Math.PI + 360) % 360;
 
         var direction = angleInDegrees switch
-        {
-            >= 315 - 22.5 => TurretDirection.SouthEast,
+        { // note that East and West are flipped :(
+            >= 315 - 22.5 => TurretDirection.SouthWest,
             >= 270 - 22.5 => TurretDirection.South,
-            >= 225 - 22.5 => TurretDirection.SouthWest,
-            >= 180 - 22.5 => TurretDirection.West,
-            >= 135 - 22.5 => TurretDirection.NorthWest,
+            >= 225 - 22.5 => TurretDirection.SouthEast,
+            >= 180 - 22.5 => TurretDirection.East,
+            >= 135 - 22.5 => TurretDirection.NorthEast,
             >=  90 - 22.5 => TurretDirection.North,
-            >=  45 - 22.5 => TurretDirection.NorthEast,
-            _             => TurretDirection.East
+            >=  45 - 22.5 => TurretDirection.NorthWest,
+            _             => TurretDirection.West
         };
 
         return direction == Opposite(bullet.Direction);

@@ -23,8 +23,9 @@ public record NewPosition
         MoveTo = moveTo;
         X = basePosition.X + MoveTo switch
         {
-            Direction.East => -1,
-            Direction.West =>  1,
+            // note that East and West are flipped :(
+            Direction.West => -1,
+            Direction.East =>  1,
             _ => 0
         };
         Y = basePosition.Y + MoveTo switch

@@ -18,9 +18,10 @@ public record Target
 
         Distance = Math.Sqrt(Math.Pow(diffY, 2) + Math.Pow(diffX, 2));
 
+        // note that East and West are flipped :(
         if (myPosition.Y == target.Y)
         {
-            Direction = myPosition.X > target.X ? TurretDirection.East : TurretDirection.West;
+            Direction = myPosition.X > target.X ? TurretDirection.West : TurretDirection.East;
         }
         else if (myPosition.X == target.X)
         {
@@ -32,14 +33,14 @@ public record Target
 
             Direction = angleInDegrees switch
             {
-                >= 315 - 22.5 => TurretDirection.SouthEast,
+                >= 315 - 22.5 => TurretDirection.SouthWest,
                 >= 270 - 22.5 => TurretDirection.South,
-                >= 225 - 22.5 => TurretDirection.SouthWest,
-                >= 180 - 22.5 => TurretDirection.West,
-                >= 135 - 22.5 => TurretDirection.NorthWest,
+                >= 225 - 22.5 => TurretDirection.SouthEast,
+                >= 180 - 22.5 => TurretDirection.East,
+                >= 135 - 22.5 => TurretDirection.NorthEast,
                 >=  90 - 22.5 => TurretDirection.North,
-                >=  45 - 22.5 => TurretDirection.NorthEast,
-                _             => TurretDirection.East
+                >=  45 - 22.5 => TurretDirection.NorthWest,
+                _             => TurretDirection.West
             };
         }
     }
