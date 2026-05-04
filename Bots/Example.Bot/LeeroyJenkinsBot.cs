@@ -1,9 +1,9 @@
 using TankDestroyer.API;
 
-namespace Example.Bot;
+namespace LeeroyJenkins.Bot;
 
 [Bot("Leeroy Jenkins 2.0", "Kevin & Deon", "ff4d00")]
-public class DeonKevinBot : IPlayerBot
+public class LeeroyJenkinsBot : IPlayerBot
 {
     private static readonly Random _random = new();
     private static int turnCount = 0;
