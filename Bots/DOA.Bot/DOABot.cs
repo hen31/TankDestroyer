@@ -75,6 +75,10 @@ public class DOABot : IPlayerBot
             {
                 continue;
             }
+            if (tank.Destroyed)
+            {
+                continue;
+            }
 
             possibleTargets.Add(new Target(currentPosition, target: tank));
         }
