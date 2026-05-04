@@ -15,9 +15,6 @@
     <Project Path="Bots/Laurens.Bot/Laurens.Bot.csproj" >
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
-    <Project Path="Bots/Example.Bot/LeeroyJenkins.Bot.csproj" />
-        <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
-    <Project Path="Bots/HDJO.Bot/HDJO.Bot.csproj" />
   </Folder>
   <Folder Name="/Game/">
     <Project Path="Game/TankDestroyer.csproj">
