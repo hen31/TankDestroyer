@@ -61,7 +61,6 @@ public class GameRunner
             }
         }
 
-        var currentBullets = GetBullets();
         foreach (var bullet in GetBullets())
         {
             ProcessBullet(bullet);
