@@ -5,76 +5,53 @@ namespace ANSU.Bot;
 [Bot("ANSU TankHunter", "ANSU", "FF6600")]
 public class ANSUBot : IPlayerBot
 {
-    // Coordinate system:
-    //   North = Y+1, South = Y-1, East = X-1, West = X+1
-    //
-    // ENGINE BUG WORKAROUND for GetTile:
-    //   PlayerTurnContext.GetTile(y, x) calls World.GetTile(y, x),
-    //   but World.GetTile(int x, int y) treats its FIRST arg as X.
-    //   Result: ctx.GetTile(A, B) returns Tiles[(B * Width) + A].
-    //   To get the correct tile at world (X, Y), call ctx.GetTile(X, Y) — X first.
-
     public void DoTurn(ITurnContext ctx)
     {
-        var me = ctx.Tank;
+        var myTank = ctx.Tank;
 
         var enemies = ctx.GetTanks()
-            .Where(t => t.OwnerId != me.OwnerId && !t.Destroyed)
+            .Where(tank => tank.OwnerId != myTank.OwnerId && !tank.Destroyed)
             .ToArray();
 
         if (enemies.Length == 0) return;
 
-        var target = enemies.OrderBy(e => ManhattanDist(me.X, me.Y, e.X, e.Y)).First();
+        var target = enemies.OrderBy(e => ManhattanDist(myTank.X, myTank.Y, e.X, e.Y)).First();
 
-        // ── Step 1: Determine movement ────────────────────────────────────────
-        // Calculate movement first so we can aim from the post-move position.
-        // Turn order: rotate(0) → move(30) → fire(1000).
-        // Turret is set now but the bullet fires AFTER the tank has moved.
-        var moveDir = ChooseMove(ctx, me, target);
+        var moveDirection = ChooseMove(ctx, myTank, target);
 
-        // Predict where we'll be when firing (post-move position)
-        int postX = moveDir.HasValue ? NewX(me.X, moveDir.Value) : me.X;
-        int postY = moveDir.HasValue ? NewY(me.Y, moveDir.Value) : me.Y;
+        int postX = moveDirection.HasValue ? NewX(myTank.X, moveDirection.Value) : myTank.X;
+        int postY = moveDirection.HasValue ? NewY(myTank.Y, moveDirection.Value) : myTank.Y;
 
-        // ── Step 2: Rotate turret toward target from post-move position ───────
-        var aimDir = GetBestAimDirection(postX, postY, target.X, target.Y);
-        ctx.RotateTurret(aimDir);
+        var aimDirection = GetBestAimDirection(postX, postY, target.X, target.Y);
+        ctx.RotateTurret(aimDirection);
 
-        // ── Step 3: Submit movement ───────────────────────────────────────────
-        if (moveDir.HasValue)
-            ctx.MoveTank(moveDir.Value);
+        if (moveDirection.HasValue)
+            ctx.MoveTank(moveDirection.Value);
 
-        // ── Step 4: Fire if path from post-move position is clear ─────────────
-        // A bullet fired from a tree immediately self-destructs, so skip.
         if (GetTileType(ctx, postX, postY) == TileType.Tree) return;
 
-        if (HasClearPath(ctx, postX, postY, target.X, target.Y, aimDir))
+        if (HasClearPath(ctx, postX, postY, target.X, target.Y, aimDirection))
             ctx.Fire();
     }
 
-    // ── Movement decision ─────────────────────────────────────────────────────
-
-    private Direction? ChooseMove(ITurnContext ctx, ITank me, ITank target)
+    private Direction? ChooseMove(ITurnContext ctx, ITank myTank, ITank target)
     {
-        // Priority 1: dodge any incoming bullet
         foreach (var bullet in ctx.GetBullets())
         {
-            if (IsBulletThreat(bullet, me.X, me.Y))
+            if (IsBulletThreat(bullet, myTank.X, myTank.Y))
             {
-                var dodge = GetDodgeDirection(ctx, me, bullet);
+                var dodge = GetDodgeDirection(ctx, myTank, bullet);
                 if (dodge.HasValue) return dodge;
             }
         }
 
-        // Priority 2: seek tree cover when health is critical
-        if (me.Health <= 25)
+        if (myTank.Health <= 25)
         {
-            var cover = SeekCover(ctx, me);
+            var cover = SeekCover(ctx, myTank);
             if (cover.HasValue) return cover;
         }
 
-        // Priority 3: align on same row or column as target for a cardinal shot
-        return GetAlignmentMove(ctx, me, target);
+        return GetAlignmentMove(ctx, myTank, target);
     }
 
     private static bool IsBulletThreat(IBullet bullet, int myX, int myY)
@@ -89,7 +66,7 @@ public class ANSUBot : IPlayerBot
         return false;
     }
 
-    private static Direction? GetDodgeDirection(ITurnContext ctx, ITank me, IBullet bullet)
+    private static Direction? GetDodgeDirection(ITurnContext ctx, ITank myTank, IBullet bullet)
     {
         bool ns = bullet.Direction.HasFlag(TurretDirection.North) ||
                   bullet.Direction.HasFlag(TurretDirection.South);
@@ -103,73 +80,67 @@ public class ANSUBot : IPlayerBot
                 : new[] { Direction.North, Direction.South, Direction.East, Direction.West };
 
         foreach (var dir in candidates)
-            if (CanMove(ctx, me, dir)) return dir;
+            if (CanMove(ctx, myTank, dir)) return dir;
 
         return null;
     }
 
-    private static Direction? SeekCover(ITurnContext ctx, ITank me)
+    private static Direction? SeekCover(ITurnContext ctx, ITank myTank)
     {
         foreach (var dir in AllDirections())
         {
-            int nx = NewX(me.X, dir), ny = NewY(me.Y, dir);
+            int nx = NewX(myTank.X, dir), ny = NewY(myTank.Y, dir);
             if (!InBounds(ctx, nx, ny)) continue;
-            if (GetTileType(ctx, nx, ny) == TileType.Tree && CanMove(ctx, me, dir))
+            if (GetTileType(ctx, nx, ny) == TileType.Tree && CanMove(ctx, myTank, dir))
                 return dir;
         }
         return null;
     }
 
-    private static Direction? GetAlignmentMove(ITurnContext ctx, ITank me, ITank target)
+    private static Direction? GetAlignmentMove(ITurnContext ctx, ITank myTank, ITank target)
     {
-        int dx = me.X - target.X;  // positive → target is East of us
-        int dy = target.Y - me.Y;  // positive → target is North of us
+        int dx = myTank.X - target.X; 
+        int dy = target.Y - myTank.Y;
 
-        // Already on same column: only close in if still out of range
         if (dx == 0)
         {
             if (Math.Abs(dy) > 6)
             {
                 var d = dy > 0 ? Direction.North : Direction.South;
-                if (CanMove(ctx, me, d)) return d;
+                if (CanMove(ctx, myTank, d)) return d;
             }
             return null;
         }
 
-        // Already on same row: only close in if still out of range
         if (dy == 0)
         {
             if (Math.Abs(dx) > 6)
             {
                 var d = dx > 0 ? Direction.East : Direction.West;
-                if (CanMove(ctx, me, d)) return d;
+                if (CanMove(ctx, myTank, d)) return d;
             }
             return null;
         }
 
-        // Not aligned: reduce the smaller offset first to reach alignment faster
         if (Math.Abs(dx) <= Math.Abs(dy))
         {
             var d = dx > 0 ? Direction.East : Direction.West;
-            if (CanMove(ctx, me, d)) return d;
+            if (CanMove(ctx, myTank, d)) return d;
         }
 
         {
             var d = dy > 0 ? Direction.North : Direction.South;
-            if (CanMove(ctx, me, d)) return d;
+            if (CanMove(ctx, myTank, d)) return d;
         }
 
-        // Fallback: other axis
         if (Math.Abs(dx) > Math.Abs(dy))
         {
             var d = dx > 0 ? Direction.East : Direction.West;
-            if (CanMove(ctx, me, d)) return d;
+            if (CanMove(ctx, myTank, d)) return d;
         }
 
         return null;
     }
-
-    // ── Firing helpers ────────────────────────────────────────────────────────
 
     private static bool HasClearPath(ITurnContext ctx, int fromX, int fromY,
                                      int toX, int toY, TurretDirection dir)
@@ -191,8 +162,6 @@ public class ANSUBot : IPlayerBot
         }
         return false;
     }
-
-    // ── Direction arithmetic ──────────────────────────────────────────────────
 
     private static TurretDirection GetBestAimDirection(int myX, int myY, int tX, int tY)
     {
@@ -239,20 +208,15 @@ public class ANSUBot : IPlayerBot
         if (dir.HasFlag(TurretDirection.West)) sx += 1;
     }
 
-    // ── Tile helpers (engine bug workaround) ──────────────────────────────────
-    // ctx.GetTile(A, B) returns Tiles[(B*Width)+A]; to get tile at world (x,y) call ctx.GetTile(x, y).
-
     private static TileType GetTileType(ITurnContext ctx, int x, int y)
         => ctx.GetTile(x, y).TileType;
 
     private static bool InBounds(ITurnContext ctx, int x, int y)
         => x >= 0 && x < ctx.GetMapWidth() && y >= 0 && y < ctx.GetMapHeight();
 
-    // ── Movement helpers ──────────────────────────────────────────────────────
-
-    private static bool CanMove(ITurnContext ctx, ITank me, Direction dir)
+    private static bool CanMove(ITurnContext ctx, ITank myTank, Direction dir)
     {
-        int nx = NewX(me.X, dir), ny = NewY(me.Y, dir);
+        int nx = NewX(myTank.X, dir), ny = NewY(myTank.Y, dir);
 
         if (!InBounds(ctx, nx, ny)) return false;
         if (GetTileType(ctx, nx, ny) == TileType.Water) return false;
