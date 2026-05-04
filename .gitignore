@@ -27,7 +27,7 @@ ref/
 refint/
 Build/
 
-
+.vs/
 
 .idea/
 /.vs
