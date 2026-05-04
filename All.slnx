@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Bots/">
-<<<<<<< HEAD
     <Project Path="Bots/ANSU.Bot/ANSU.Bot.csproj">
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
@@ -11,6 +10,13 @@
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
       <Project Path="Bots/TankYou.Bot/TankYou.Bot.csproj">
+        
+  <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
+    <Project Path="Bots/LISM.Bot/LISM.Bot.csproj">
+          <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
+    <Project Path="Bots/Laurens.Bot/Laurens.Bot.csproj" >
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
   </Folder>
