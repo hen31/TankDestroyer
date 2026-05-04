@@ -56,7 +56,7 @@ public class DOABot : IPlayerBot
             .ToArray();
 
         // 4. Determine the new position and move if needed
-        var newPosition = FindBestSpot(safestPositions, context);
+        var newPosition = FindBestPosition(safestPositions, context);
         if (newPosition.MoveTo.HasValue)
         {
             context.MoveTank(newPosition.MoveTo.Value);
@@ -123,7 +123,7 @@ public class DOABot : IPlayerBot
         return direction == Opposite(bullet.Direction);
     }
 
-    private NewPosition FindBestSpot(NewPosition[] possiblePositions, ITurnContext context)
+    private NewPosition FindBestPosition(NewPosition[] possiblePositions, ITurnContext context)
     {
         NewPosition newPosition = possiblePositions[0];
         if (possiblePositions.Length == 1)
@@ -159,6 +159,7 @@ public class DOABot : IPlayerBot
         TurretDirection.SouthWest => TurretDirection.NorthEast,
         TurretDirection.West      => TurretDirection.East,
         TurretDirection.NorthWest => TurretDirection.SouthEast,
+
         _ => throw new NotSupportedException()
     };
 }
