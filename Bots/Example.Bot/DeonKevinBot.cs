@@ -5,9 +5,6 @@ namespace Example.Bot;
 [Bot("Aggressive", "Kevin & Deon", "F527A6")]
 public class DeonKevinBot : IPlayerBot
 {
-    private readonly Random _random = new Random();
-    private const double RandomMoveProbability = 0.1; // 30% chance to move randomly
-
     public void DoTurn(ITurnContext turnContext)
     {
         var tanks = turnContext.GetTanks();
@@ -95,52 +92,23 @@ public class DeonKevinBot : IPlayerBot
 
         if (dx == 0 && dy == 0) return null;
 
-        // Randomly try a random legal direction
-        if (_random.NextDouble() < RandomMoveProbability)
-        {
-            var randomDirection = GetRandomDirection();
-            if (IsLegalTile(our, randomDirection, turnContext))
-            {
-                return randomDirection;
-            }
-        }
-
-        // Fall back to planned path
-        var nextDirection = Direction.North;
-        var secondBestDirection = Direction.South;
+        Direction primaryDirection;
+        Direction secondaryDirection;
 
         if (Math.Abs(dx) > Math.Abs(dy))
         {
-            nextDirection = dx > 0 ? Direction.West : Direction.East;
-            secondBestDirection = dy > 0 ? Direction.North : Direction.South;
+            primaryDirection = dx > 0 ? Direction.West : Direction.East;
+            secondaryDirection = dy > 0 ? Direction.North : Direction.South;
         }
         else
         {
-            nextDirection = dy > 0 ? Direction.North : Direction.South;
-            secondBestDirection = dx > 0 ? Direction.West : Direction.East;
+            primaryDirection = dy > 0 ? Direction.North : Direction.South;
+            secondaryDirection = dx > 0 ? Direction.West : Direction.East;
         }
 
-        List<Direction> directionsToCheck = new() { nextDirection, secondBestDirection };
+        var directionsToTry = new[] { primaryDirection, secondaryDirection };
 
-        if (nextDirection == Direction.North)
-        {
-            directionsToCheck.Add(Direction.South);
-        }
-        else
-        {
-            directionsToCheck.Add(Direction.North);
-        }
-
-        if (secondBestDirection == Direction.East)
-        {
-            directionsToCheck.Add(Direction.West);
-        }
-        else
-        {
-            directionsToCheck.Add(Direction.East);
-        }
-
-        foreach (var direction in directionsToCheck)
+        foreach (var direction in directionsToTry)
         {
             if (IsLegalTile(our, direction, turnContext))
             {
@@ -148,31 +116,21 @@ public class DeonKevinBot : IPlayerBot
             }
         }
 
-        return nextDirection;
-    }
-
-    private Direction GetRandomDirection()
-    {
-        var directions = new[] { Direction.North, Direction.South, Direction.East, Direction.West };
-        return directions[_random.Next(directions.Length)];
+        return null;
     }
 
     private bool IsLegalTile(ITank ourTank, Direction direction, ITurnContext turnContext)
     {
         (int X, int Y) nextPos = GetNextPosition(ourTank, direction);
 
-        // Check bounds before accessing tile
-        if (nextPos.X < 0 || nextPos.X >= turnContext.GetMapHeight() ||
-            nextPos.Y < 0 || nextPos.Y >= turnContext.GetMapWidth())
+        if (nextPos.X < 0 || nextPos.X >= turnContext.GetMapWidth() ||
+            nextPos.Y < 0 || nextPos.Y >= turnContext.GetMapHeight())
         {
             return false;
         }
 
-        Console.WriteLine($"Checking tile at {nextPos.X}, {nextPos.Y} for direction {direction}");
-        var tile = turnContext.GetTile(nextPos.X, nextPos.Y);
-
-        if (tile == null) { return false; }
-        return tile.TileType != TileType.Water;
+        var tile = turnContext.GetTile(nextPos.Y, nextPos.X);
+        return tile is not null && tile.TileType != TileType.Water;
     }
 
     private static (int X, int Y) GetNextPosition(ITank ourTank, Direction direction)
@@ -181,16 +139,16 @@ public class DeonKevinBot : IPlayerBot
         switch (direction)
         {
             case Direction.North:
-                nextPos.X += 1;
-                break;
-            case Direction.West:
                 nextPos.Y += 1;
                 break;
+            case Direction.West:
+                nextPos.X += 1;
+                break;
             case Direction.South:
-                nextPos.X -= 1;
+                nextPos.Y -= 1;
                 break;
             case Direction.East:
-                nextPos.Y -= 1;
+                nextPos.X -= 1;
                 break;
         }
 
