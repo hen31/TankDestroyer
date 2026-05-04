@@ -22,7 +22,7 @@ public class DOABot : IPlayerBot
         };
         foreach (var direction in Enum.GetValues<Direction>())
         {
-            if (NewPosition.PositionExists(currentPosition, direction))
+            if (NewPosition.PositionExists(currentPosition, direction, context))
             {
                 possiblePositions.Add(new NewPosition(currentPosition,  direction));
             }
