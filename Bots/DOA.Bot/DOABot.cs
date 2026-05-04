@@ -126,6 +126,9 @@ public class DOABot : IPlayerBot
 
     private NewPosition FindBestSpot(NewPosition[] possiblePositions, ITurnContext context)
     {
+        NewPosition newPosition = possiblePositions[0];
+
+        return newPosition;
     }
 
     private static TurretDirection Opposite(TurretDirection direction) => direction switch
