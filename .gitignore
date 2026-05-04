@@ -21,6 +21,7 @@ rider.project.model.nuget.info
 .NETCoreApp,Version=*.AssemblyAttributes.cs
 *.GeneratedMSBuildEditorConfig.editorconfig
 *.assets.cache
+*.DotSettings.user
 
 # Reference assemblies
 ref/
