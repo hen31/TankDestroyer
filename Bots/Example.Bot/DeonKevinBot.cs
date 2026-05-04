@@ -5,6 +5,9 @@ namespace Example.Bot;
 [Bot("Aggressive", "Kevin & Deon", "F527A6")]
 public class DeonKevinBot : IPlayerBot
 {
+    private readonly Random _random = new Random();
+    private const double RandomMoveProbability = 0.1; // 30% chance to move randomly
+
     public void DoTurn(ITurnContext turnContext)
     {
         var tanks = turnContext.GetTanks();
@@ -92,7 +95,17 @@ public class DeonKevinBot : IPlayerBot
 
         if (dx == 0 && dy == 0) return null;
 
+        // Randomly try a random legal direction
+        if (_random.NextDouble() < RandomMoveProbability)
+        {
+            var randomDirection = GetRandomDirection();
+            if (IsLegalTile(our, randomDirection, turnContext))
+            {
+                return randomDirection;
+            }
+        }
 
+        // Fall back to planned path
         var nextDirection = Direction.North;
         var secondBestDirection = Direction.South;
 
@@ -133,21 +146,33 @@ public class DeonKevinBot : IPlayerBot
             {
                 return direction;
             }
-
         }
 
         return nextDirection;
+    }
+
+    private Direction GetRandomDirection()
+    {
+        var directions = new[] { Direction.North, Direction.South, Direction.East, Direction.West };
+        return directions[_random.Next(directions.Length)];
     }
 
     private bool IsLegalTile(ITank ourTank, Direction direction, ITurnContext turnContext)
     {
         (int X, int Y) nextPos = GetNextPosition(ourTank, direction);
 
+        // Check bounds before accessing tile
+        if (nextPos.X < 0 || nextPos.X >= turnContext.GetMapHeight() ||
+            nextPos.Y < 0 || nextPos.Y >= turnContext.GetMapWidth())
+        {
+            return false;
+        }
+
         Console.WriteLine($"Checking tile at {nextPos.X}, {nextPos.Y} for direction {direction}");
         var tile = turnContext.GetTile(nextPos.X, nextPos.Y);
 
         if (tile == null) { return false; }
-        return tile.TileType == TileType.Water;
+        return tile.TileType != TileType.Water;
     }
 
     private static (int X, int Y) GetNextPosition(ITank ourTank, Direction direction)
