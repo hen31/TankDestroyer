@@ -9,8 +9,13 @@ namespace PillenPower.Bot;
 public class PillenPowerBot : IPlayerBot
 {
     private Random _random = new();
+    private Direction? _lastMove;
+    private bool _peekLeftNext = true;
+    private readonly Queue<(int, int)> _recentPositions = new();
 
-    // FIX: was (1 << _random.Next(0,4)) which only generates cardinals — now includes diagonals
+    private const int StallHistoryLength = 16;
+    private const int StallUniqueThreshold = 3;
+
     private static readonly TurretDirection[] _allDirections = {
         TurretDirection.North, TurretDirection.NorthEast,
         TurretDirection.East,  TurretDirection.SouthEast,
@@ -24,6 +29,15 @@ public class PillenPowerBot : IPlayerBot
         var enemyTanks = turnContext.GetTanks()
                                     .Where(t => t.OwnerId != myTank.OwnerId && !t.Destroyed)
                                     .ToList();
+        int enemyCount = enemyTanks.Count;
+
+        // Track position history to detect camping deadlocks
+        _recentPositions.Enqueue((myTank.X, myTank.Y));
+        if (_recentPositions.Count > StallHistoryLength)
+            _recentPositions.Dequeue();
+        bool isStalling = _recentPositions.Count >= StallHistoryLength
+            && _recentPositions.Distinct().Count() <= StallUniqueThreshold;
+        var visitedTiles = new HashSet<(int, int)>(_recentPositions);
 
         // 1. Target Selection — prioritize wounded enemies (one hit can finish them)
         ITank? target = enemyTanks
@@ -36,12 +50,13 @@ public class PillenPowerBot : IPlayerBot
             distMap = GetDistanceMap(turnContext, target);
 
         // 3. Tactical Movement (Hunt & Slay)
-        Direction? moveDirection = GetTacticalMove(turnContext, myTank, target, distMap);
+        Direction? moveDirection = GetTacticalMove(turnContext, myTank, target, distMap, enemyCount, isStalling, visitedTiles);
         int finalX = myTank.X;
         int finalY = myTank.Y;
         if (moveDirection.HasValue)
         {
             turnContext.MoveTank(moveDirection.Value);
+            _lastMove = moveDirection.Value;
             switch (moveDirection.Value)
             {
                 case Direction.North: finalY++; break;
@@ -105,9 +120,11 @@ public class PillenPowerBot : IPlayerBot
         return dist;
     }
 
-    private Direction? GetTacticalMove(ITurnContext turnContext, ITank myTank, ITank? target, int[,]? distMap)
+    private Direction? GetTacticalMove(ITurnContext turnContext, ITank myTank, ITank? target,
+        int[,]? distMap, int enemyCount, bool isStalling, HashSet<(int, int)> visitedTiles)
     {
-        var dangerZones = GetDangerZones(turnContext, myTank);
+        GetDangerZones(turnContext, myTank, out var realDanger, out var predictedDanger);
+        bool currentlyInTree = turnContext.GetTile(myTank.Y, myTank.X).TileType == TileType.Tree;
 
         double bestScore = double.MinValue;
         Direction bestDir = Direction.North;
@@ -117,7 +134,8 @@ public class PillenPowerBot : IPlayerBot
         {
             if (!IsMoveValid(turnContext, myTank, dir, out int nx, out int ny)) continue;
 
-            double score = CalculateTileScore(turnContext, nx, ny, target, dangerZones, distMap, myTank);
+            double score = CalculateTileScore(turnContext, nx, ny, target, realDanger, predictedDanger,
+                distMap, myTank, enemyCount, isStalling, visitedTiles);
             if (score > bestScore)
             {
                 bestScore = score;
@@ -127,25 +145,36 @@ public class PillenPowerBot : IPlayerBot
         }
 
         // FIX: use noise-free score for stay/move comparison so the threshold is deterministic
-        double currentTileScore = CalculateTileScore(turnContext, myTank.X, myTank.Y, target, dangerZones, distMap, myTank, noNoise: true);
+        double currentTileScore = CalculateTileScore(turnContext, myTank.X, myTank.Y, target, realDanger, predictedDanger,
+            distMap, myTank, enemyCount, isStalling, visitedTiles, noNoise: true);
 
         if (!foundValid) return null;
 
-        bool currentlyDangerous = dangerZones.Contains((myTank.X, myTank.Y));
+        bool currentlyDangerous = realDanger.Contains((myTank.X, myTank.Y))
+            || (!isStalling && predictedDanger.Contains((myTank.X, myTank.Y)));
+
         if (currentlyDangerous || bestScore > currentTileScore)
+        {
+            if (currentlyInTree)
+                _peekLeftNext = !_peekLeftNext;
             return bestDir;
+        }
 
         return null;
     }
 
     private double CalculateTileScore(ITurnContext ctx, int x, int y, ITank? target,
-        HashSet<(int, int)> dangerZones, int[,]? distMap, ITank myTank, bool noNoise = false)
+        HashSet<(int, int)> realDanger, HashSet<(int, int)> predictedDanger,
+        int[,]? distMap, ITank myTank, int enemyCount,
+        bool isStalling, HashSet<(int, int)> visitedTiles, bool noNoise = false)
     {
         double score = 0;
 
-        // 1. Safety (critical)
-        if (dangerZones.Contains((x, y)))
+        // 1. Safety — real bullets always critical; predicted danger relaxed when stalling to break deadlocks
+        if (realDanger.Contains((x, y)))
             score -= 10000;
+        else if (predictedDanger.Contains((x, y)))
+            score -= isStalling ? 2000 : 10000;
 
         // 2. Cover — FIX: GetTile(y, x)
         var tileType = ctx.GetTile(y, x).TileType;
@@ -153,23 +182,31 @@ public class PillenPowerBot : IPlayerBot
 
         if (tileType == TileType.Building)
         {
-            score += 1200; // 50% damage mitigation
+            score += 1200;
+            if (enemyCount >= 2) score += 400;
         }
         else if (tileType == TileType.Tree)
         {
-            // Trees give best cover (25% damage), but block firing.
-            // Value them highly when there's an adjacent tile from which we can still shoot.
             bool hasPeekSpot = HasAdjacentFirePosition(ctx, x, y, target);
-            score += hasPeekSpot ? 2000 : 800;
+            double treeCoverBonus = hasPeekSpot ? 2000 : 800;
+            // When stalling, heavily suppress tree camping to force the bot to break out
+            if (isStalling) treeCoverBonus -= 1500;
+            score += treeCoverBonus;
+            if (hasPeekSpot && enemyCount >= 2) score += 200;
 
-            // Extra incentive to retreat to tree when low health
+            // Graduated own-health urgency — stacking bonuses (still applies even when stalling)
+            if (myTank.Health <= 75) score += 300;
+            if (myTank.Health <= 50) score += 700;
             if (myTank.Health <= 25) score += 1500;
 
-            // Penalise moving from one tree to another — it wastes a turn with no benefit
-            // and causes the bot to oscillate between adjacent trees indefinitely
+            // Penalise moving from one tree to another — wastes a turn
             if (currentlyInTree && (x != ctx.Tank.X || y != ctx.Tank.Y))
                 score -= 1500;
         }
+
+        // Anti-stall: penalize any tile that was visited recently
+        if (isStalling && visitedTiles.Contains((x, y)))
+            score -= 3000;
 
         // Bonus for being adjacent to a tree — quick retreat available
         if (tileType != TileType.Tree && IsAdjacentToTree(ctx, x, y))
@@ -180,16 +217,24 @@ public class PillenPowerBot : IPlayerBot
         {
             if (HasLineOfSight(x, y, target.X, target.Y, ctx))
                 score += 800;
+
+            // Peek alternation: prefer alternating left/right side
+            if (_peekLeftNext  && x < myTank.X) score += 150;
+            if (!_peekLeftNext && x > myTank.X) score += 150;
         }
 
         // 3. Aggressive proximity
         if (target != null)
         {
             int pathDist = (distMap != null) ? distMap[x, y] : 999;
+            double distanceCostPerStep = enemyCount >= 2 ? 100 : 150;
+
             if (pathDist < 999)
             {
-                score -= pathDist * 150;
-                // Extra urgency to close on near-dead enemies
+                score -= pathDist * distanceCostPerStep;
+                // Graduated target-health urgency — stacking extra aggression
+                if (target.Health <= 75) score -= pathDist * 30;
+                if (target.Health <= 50) score -= pathDist * 70;
                 if (target.Health <= 25) score -= pathDist * 100;
             }
             else
@@ -197,26 +242,43 @@ public class PillenPowerBot : IPlayerBot
                 score -= Distance(x, y, target.X, target.Y) * 50;
             }
 
-            // 4. Line of sight priority
+            // 4. Line of sight priority — scale with enemy count
             if (HasLineOfSight(x, y, target.X, target.Y, ctx))
             {
-                score += 2500;
-                if (Distance(x, y, target.X, target.Y) <= 5) score += 1000;
+                score += enemyCount >= 2 ? 1800 : 2500;
+                if (enemyCount == 1 && Distance(x, y, target.X, target.Y) <= 5)
+                    score += 1000;
             }
             else
             {
-                // Roughly-cardinal alignment: minor axis < 30% of major axis.
-                // No exact LOS but firing along the dominant axis gives the enemy time to
-                // walk into the bullet — worth something, unlike a stray diagonal.
                 int tdx = Math.Abs(target.X - x);
                 int tdy = Math.Abs(target.Y - y);
                 int minor = Math.Min(tdx, tdy), major = Math.Max(tdx, tdy);
                 if (major > 0 && minor < major * 0.3)
                     score += 600;
             }
+
+            // 5. Jiggle reversal bonus — at close range, reward reversing last move
+            int closeDist = (distMap != null && distMap[x, y] < 999) ? distMap[x, y] : (int)Distance(x, y, target.X, target.Y);
+            if (closeDist <= 6)
+            {
+                Direction? candidateDir = DirectionToCandidate(myTank.X, myTank.Y, x, y);
+                if (_lastMove.HasValue && candidateDir.HasValue && WouldReverse(_lastMove.Value, candidateDir.Value))
+                    score += 700;
+            }
+
+            // 6. Side-step bonus (1v1 only) — break/reform alignment with enemy
+            if (enemyCount == 1)
+            {
+                bool currentlyAligned = IsOnStraightOrDiagonalLine(myTank.X, myTank.Y, target.X, target.Y);
+                bool candidateAligned = IsOnStraightOrDiagonalLine(x, y, target.X, target.Y);
+                if (currentlyAligned && !candidateAligned) score += 500;
+                else if (!currentlyAligned && candidateAligned) score += 300;
+                else if (currentlyAligned && candidateAligned) score -= 200;
+            }
         }
 
-        // 5. Unpredictability — small nudge to keep moving
+        // 7. Unpredictability — small nudge to keep moving
         if (x != ctx.Tank.X || y != ctx.Tank.Y)
             score += 50;
 
@@ -240,7 +302,6 @@ public class PillenPowerBot : IPlayerBot
             int ax = treeX + dx[i];
             int ay = treeY + dy[i];
             if (ax < 0 || ax >= ctx.GetMapWidth() || ay < 0 || ay >= ctx.GetMapHeight()) continue;
-            // FIX: GetTile(y, x)
             if (ctx.GetTile(ay, ax).TileType == TileType.Water) continue;
             if (HasLineOfSight(ax, ay, target.X, target.Y, ctx)) return true;
         }
@@ -256,7 +317,6 @@ public class PillenPowerBot : IPlayerBot
             int ax = x + dx[i];
             int ay = y + dy[i];
             if (ax < 0 || ax >= ctx.GetMapWidth() || ay < 0 || ay >= ctx.GetMapHeight()) continue;
-            // FIX: GetTile(y, x)
             if (ctx.GetTile(ay, ax).TileType == TileType.Tree) return true;
         }
         return false;
@@ -278,16 +338,17 @@ public class PillenPowerBot : IPlayerBot
         {
             int tx = x1 + stepX * i;
             int ty = y1 + stepY * i;
-            // FIX: GetTile(y, x)
             var t = ctx.GetTile(ty, tx).TileType;
             if (t == TileType.Tree || t == TileType.Building) return false;
         }
         return true;
     }
 
-    private HashSet<(int, int)> GetDangerZones(ITurnContext ctx, ITank myTank)
+    private void GetDangerZones(ITurnContext ctx, ITank myTank,
+        out HashSet<(int, int)> realDanger, out HashSet<(int, int)> predictedDanger)
     {
-        var zones = new HashSet<(int, int)>();
+        realDanger      = new HashSet<(int, int)>();
+        predictedDanger = new HashSet<(int, int)>();
 
         foreach (var bullet in ctx.GetBullets())
         {
@@ -302,21 +363,16 @@ public class PillenPowerBot : IPlayerBot
             int vy = myTank.Y - bullet.Y;
             if (vx * bdx + vy * bdy < 0) continue;
 
-            // Actual bullets keep travelling every turn — mark their full future path
-            AddBulletPath(zones, bullet.X, bullet.Y, bullet.Direction, ctx);
+            AddBulletPath(realDanger, bullet.X, bullet.Y, bullet.Direction, ctx);
         }
 
         foreach (var enemy in ctx.GetTanks().Where(t => t.OwnerId != myTank.OwnerId && !t.Destroyed))
         {
             TurretDirection predictedDir = GetTurretDirectionToTarget(enemy.X, enemy.Y, myTank.X, myTank.Y, enemy.TurretDirection);
-            // Predicted fire is uncertain — the enemy might not fire, might rotate, or the shot
-            // might be blocked. Only mark a short window so we don't block huge map sections
-            // based on a guess. 8 cells ≈ one full bullet turn of coverage.
-            AddBulletPath(zones, enemy.X, enemy.Y, enemy.TurretDirection, ctx, maxRange: 8);
+            AddBulletPath(predictedDanger, enemy.X, enemy.Y, enemy.TurretDirection, ctx, maxRange: 8);
             if (predictedDir != enemy.TurretDirection)
-                AddBulletPath(zones, enemy.X, enemy.Y, predictedDir, ctx, maxRange: 8);
+                AddBulletPath(predictedDanger, enemy.X, enemy.Y, predictedDir, ctx, maxRange: 8);
         }
-        return zones;
     }
 
     private void AddBulletPath(HashSet<(int, int)> zones, int startX, int startY,
@@ -353,9 +409,7 @@ public class PillenPowerBot : IPlayerBot
         }
         if (nextX < 0 || nextX >= ctx.GetMapWidth() || nextY < 0 || nextY >= ctx.GetMapHeight())
             return false;
-        // FIX: GetTile(y, x)
         if (ctx.GetTile(nextY, nextX).TileType == TileType.Water) return false;
-        // FIX: match engine — any tank (ally, enemy, or corpse) blocks the tile
         int tx = nextX, ty = nextY;
         return !ctx.GetTanks().Any(t => t.X == tx && t.Y == ty);
     }
@@ -375,9 +429,6 @@ public class PillenPowerBot : IPlayerBot
         int absDx = Math.Abs(dx);
         int absDy = Math.Abs(dy);
 
-        // Only aim diagonally when the target is close to 45° (both axes within 65% of each other).
-        // Otherwise snap to the dominant cardinal axis — a straight bullet gives the enemy
-        // travel-time to walk into it, and a badly-off diagonal shot just misses entirely.
         bool nearDiagonal = absDx > 0 && absDy > 0
             && Math.Min(absDx, absDy) >= Math.Max(absDx, absDy) * 0.65;
 
@@ -389,10 +440,33 @@ public class PillenPowerBot : IPlayerBot
             return TurretDirection.SouthEast;
         }
 
-        // Dominant axis
         if (absDy >= absDx) return dy > 0 ? TurretDirection.North : TurretDirection.South;
         return dx > 0 ? TurretDirection.West : TurretDirection.East;
     }
 
     private TurretDirection GetRandomTurretDirection() => _allDirections[_random.Next(_allDirections.Length)];
+
+    private bool IsOnStraightOrDiagonalLine(int x1, int y1, int x2, int y2)
+    {
+        int dx = Math.Abs(x1 - x2), dy = Math.Abs(y1 - y2);
+        return x1 == x2 || y1 == y2 || dx == dy;
+    }
+
+    private Direction? DirectionToCandidate(int fromX, int fromY, int toX, int toY)
+    {
+        if (toY > fromY) return Direction.North;
+        if (toY < fromY) return Direction.South;
+        if (toX < fromX) return Direction.East;
+        if (toX > fromX) return Direction.West;
+        return null;
+    }
+
+    private bool WouldReverse(Direction previous, Direction current) => previous switch
+    {
+        Direction.North => current == Direction.South,
+        Direction.South => current == Direction.North,
+        Direction.East  => current == Direction.West,
+        Direction.West  => current == Direction.East,
+        _ => false
+    };
 }
