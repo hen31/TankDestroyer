@@ -120,19 +120,21 @@ public class DOABot : IPlayerBot
         
         var angleInDegrees = (Math.Atan2(diffY, diffX) * 180 / Math.PI + 360) % 360;
 
-        var direction = angleInDegrees switch
-        { // note that East and West are flipped :(
-            >= 315 - 22.5 => TurretDirection.SouthWest,
-            >= 270 - 22.5 => TurretDirection.South,
-            >= 225 - 22.5 => TurretDirection.SouthEast,
-            >= 180 - 22.5 => TurretDirection.East,
-            >= 135 - 22.5 => TurretDirection.NorthEast,
-            >=  90 - 22.5 => TurretDirection.North,
-            >=  45 - 22.5 => TurretDirection.NorthWest,
-            _             => TurretDirection.West
+        TurretDirection? direction = angleInDegrees switch
+        { // note that East and West are flipped, also North and South seems to have flipped :(
+            315 => TurretDirection.NorthWest,
+            270 => TurretDirection.North,
+            225 => TurretDirection.NorthEast,
+            180 => TurretDirection.East,
+            135 => TurretDirection.SouthEast,
+             90 => TurretDirection.South,
+             45 => TurretDirection.SouthWest,
+              0 => TurretDirection.West,
+
+            _ => null
         };
 
-        return direction == Opposite(bullet.Direction);
+        return direction.HasValue && direction.Value == Opposite(bullet.Direction);
     }
 
     private NewPosition FindBestPosition(NewPosition[] possiblePositions, ITurnContext context)
