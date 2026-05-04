@@ -5,8 +5,6 @@ namespace DOA.Bot;
 [Bot("DOABot", "Lesly", "DC143C")] // crimson
 public class DOABot : IPlayerBot
 {
-    private Random _random = new();
-
     public void DoTurn(ITurnContext context)
     {
         MoveTank(context);
