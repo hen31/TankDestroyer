@@ -30,12 +30,12 @@ public class DOABot : IPlayerBot
             }
         }
         possiblePositions = [.. possiblePositions // do not forget to avoid water
-            .Where(newPosition => context.GetTile(newPosition.Y, newPosition.X).TileType != TileType.Water)];
+            .Where(newPosition => context.GetTile(newPosition.X, newPosition.Y).TileType != TileType.Water)];
 
         // 2. Calculate the possible damage at every possible position        
         foreach (var possiblePosition in possiblePositions)
         {
-            var damage = context.GetTile(possiblePosition.Y, possiblePosition.X).TileType switch
+            var damage = context.GetTile(possiblePosition.X, possiblePosition.Y).TileType switch
             {
                 TileType.Tree => 25,
                 TileType.Building => 50,
@@ -70,7 +70,7 @@ public class DOABot : IPlayerBot
     {
         var currentPosition = (context.Tank.Y, context.Tank.X);
 
-        if (context.GetTile(currentPosition.Y, currentPosition.X).TileType == TileType.Tree)
+        if (context.GetTile(currentPosition.X, currentPosition.Y).TileType == TileType.Tree)
         { // 0. We can not fire when we are hidden from a tree
             return;
         }
