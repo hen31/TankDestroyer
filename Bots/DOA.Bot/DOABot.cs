@@ -131,13 +131,36 @@ public class DOABot : IPlayerBot
             return newPosition;
         }
 
-        var highestScore = int.MinValue;
+        Direction[] aimDirections = Aim(context) switch
+        {
+            TurretDirection.North     => [Direction.North],
+            TurretDirection.NorthEast => [Direction.North, Direction.East],
+            TurretDirection.East      => [Direction.East],
+            TurretDirection.SouthEast => [Direction.South, Direction.East],
+            TurretDirection.South     => [Direction.South],
+            TurretDirection.SouthWest => [Direction.South, Direction.West],
+            TurretDirection.West      => [Direction.West],
+            TurretDirection.NorthWest => [Direction.North, Direction.West],
+
+            _ => throw new NotSupportedException()
+        };
+
+        double highestScore = double.MinValue;
         foreach (var possiblePosition in possiblePositions)
         {
             var score = context.GetTile(possiblePosition.X, possiblePosition.Y).TileType switch
             {
+                TileType.Tree => 25,
+                TileType.Building => 50,
                 _ => 0,
-            };
+            }
+            +
+            possiblePosition.MoveTo switch
+            {
+                null => 0.25,
+                _ when aimDirections.Contains(possiblePosition.MoveTo.Value) => (aimDirections.Length == 1) ? 1.25 : 0.75,
+                _ => -0.25,
+            } * 100;
 
             if (score > highestScore)
             {
