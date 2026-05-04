@@ -63,14 +63,9 @@ public class DOABot : IPlayerBot
         }
     }
 
-    private void AimAndFire(ITurnContext context)
+    private TurretDirection Aim(ITurnContext context)
     {
         var currentPosition = (context.Tank.Y, context.Tank.X);
-
-        if (context.GetTile(currentPosition.X, currentPosition.Y).TileType == TileType.Tree)
-        { // 0. We can not fire when we are hidden from a tree
-            return;
-        }
 
         // 1. Prepare all possible targets
         var possibleTargets = new List<Target>();
@@ -86,12 +81,14 @@ public class DOABot : IPlayerBot
 
         // 2. Find our preferred target
         var minimalDistance = possibleTargets.Min(possibleTarget => possibleTarget.Distance);
-        var aimDirection = possibleTargets
+        return possibleTargets
             .First(possibleTarget => possibleTarget.Distance == minimalDistance)
             .Direction;
+    }
 
-        // 3. Aim and fire
-        context.RotateTurret(aimDirection);
+    private void AimAndFire(ITurnContext context)
+    {
+        context.RotateTurret(Aim(context));
         context.Fire();
     }
 
