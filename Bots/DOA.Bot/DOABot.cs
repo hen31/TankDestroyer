@@ -127,6 +127,10 @@ public class DOABot : IPlayerBot
     private NewPosition FindBestSpot(NewPosition[] possiblePositions, ITurnContext context)
     {
         NewPosition newPosition = possiblePositions[0];
+        if (possiblePositions.Length == 1)
+        {
+            return newPosition;
+        }
 
         return newPosition;
     }
