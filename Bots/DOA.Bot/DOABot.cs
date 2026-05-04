@@ -130,6 +130,21 @@ public class DOABot : IPlayerBot
             return newPosition;
         }
 
+        var highestScore = int.MinValue;
+        foreach (var possiblePosition in possiblePositions)
+        {
+            var score = context.GetTile(possiblePosition.X, possiblePosition.Y).TileType switch
+            {
+                _ => 0,
+            };
+
+            if (score > highestScore)
+            {
+                highestScore = score;
+                newPosition = possiblePosition;
+            }
+        }
+
         return newPosition;
     }
 
