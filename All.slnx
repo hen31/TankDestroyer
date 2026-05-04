@@ -1,16 +1,27 @@
 <Solution>
   <Folder Name="/Bots/">
-    <Project Path="Bots/Example.Bot/Example.Bot.csproj" />
-    <Project Path="Bots/HDJO.Bot/HDJO.Bot.csproj" />
+    <Project Path="Bots/Example.Bot/Example.Bot.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
+    <Project Path="Bots/HDJO.Bot/HDJO.Bot.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
   </Folder>
   <Folder Name="/Game/">
     <Project Path="Game/TankDestroyer.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+      <BuildDependency Project="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj" />
       <BuildType Project="Debug" />
     </Project>
   </Folder>
   <Folder Name="/Source/">
     <Project Path="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
-    <Project Path="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj" />
+    <Project Path="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj">
+      <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    </Project>
   </Folder>
-  <Project Path="TankDestroyer.Game.Console/TankDestroyer.Game.Console.csproj" />
+  <Project Path="TankDestroyer.Game.Console/TankDestroyer.Game.Console.csproj">
+    <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    <BuildDependency Project="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj" />
+  </Project>
 </Solution>
