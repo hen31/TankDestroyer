@@ -15,7 +15,11 @@ public class ANSUBot : IPlayerBot
 
         if (enemies.Length == 0) return;
 
-        var target = enemies.OrderBy(e => ManhattanDist(myTank.X, myTank.Y, e.X, e.Y)).First();
+        // Prioritise enemies already aiming at us, then nearest
+        var target = enemies
+            .OrderByDescending(e => EnemyAimedAtUs(e, myTank) ? 1 : 0)
+            .ThenBy(e => ManhattanDist(myTank.X, myTank.Y, e.X, e.Y))
+            .First();
 
         var moveDirection = ChooseMove(ctx, myTank, target);
 
@@ -36,21 +40,33 @@ public class ANSUBot : IPlayerBot
 
     private Direction? ChooseMove(ITurnContext ctx, ITank myTank, ITank target)
     {
-        foreach (var bullet in ctx.GetBullets())
+        var allBullets = ctx.GetBullets();
+
+        // Priority 1: dodge incoming bullets (verify new position is safe from ALL bullets)
+        foreach (var bullet in allBullets)
         {
             if (IsBulletThreat(bullet, myTank.X, myTank.Y))
             {
-                var dodge = GetDodgeDirection(ctx, myTank, bullet);
+                var dodge = GetDodgeDirection(ctx, myTank, allBullets);
                 if (dodge.HasValue) return dodge;
             }
         }
 
+        // Priority 2: cover when low health (trees first, then buildings)
         if (myTank.Health <= 25)
         {
             var cover = SeekCover(ctx, myTank);
             if (cover.HasValue) return cover;
         }
 
+        // Priority 3: sidestep if enemy is actively aiming at us
+        if (EnemyAimedAtUs(target, myTank))
+        {
+            var sidestep = GetSidestep(ctx, myTank, target);
+            if (sidestep.HasValue) return sidestep;
+        }
+
+        // Priority 4: move to align for a cardinal shot
         return GetAlignmentMove(ctx, myTank, target);
     }
 
@@ -66,19 +82,38 @@ public class ANSUBot : IPlayerBot
         return false;
     }
 
-    private static Direction? GetDodgeDirection(ITurnContext ctx, ITank myTank, IBullet bullet)
+    private static Direction? GetDodgeDirection(ITurnContext ctx, ITank myTank, IBullet[] allBullets)
     {
-        bool ns = bullet.Direction.HasFlag(TurretDirection.North) ||
-                  bullet.Direction.HasFlag(TurretDirection.South);
-        bool ew = bullet.Direction.HasFlag(TurretDirection.East) ||
-                  bullet.Direction.HasFlag(TurretDirection.West);
+        // Collect all directions that are threatened by any bullet
+        var threatened = new HashSet<Direction>();
+        foreach (var b in allBullets)
+        {
+            foreach (var dir in AllDirections())
+            {
+                int nx = NewX(myTank.X, dir), ny = NewY(myTank.Y, dir);
+                if (IsBulletThreat(b, nx, ny))
+                    threatened.Add(dir);
+            }
+        }
+
+        // Prefer directions perpendicular to the biggest threat
+        var primaryBullet = allBullets.First(b => IsBulletThreat(b, myTank.X, myTank.Y));
+        bool ns = primaryBullet.Direction.HasFlag(TurretDirection.North) ||
+                  primaryBullet.Direction.HasFlag(TurretDirection.South);
+        bool ew = primaryBullet.Direction.HasFlag(TurretDirection.East) ||
+                  primaryBullet.Direction.HasFlag(TurretDirection.West);
 
         Direction[] candidates = (ns && !ew)
-            ? new[] { Direction.East, Direction.West }
+            ? new[] { Direction.East, Direction.West, Direction.North, Direction.South }
             : (ew && !ns)
-                ? new[] { Direction.North, Direction.South }
+                ? new[] { Direction.North, Direction.South, Direction.East, Direction.West }
                 : new[] { Direction.North, Direction.South, Direction.East, Direction.West };
 
+        // Pick first candidate that is safe AND passable
+        foreach (var dir in candidates)
+            if (!threatened.Contains(dir) && CanMove(ctx, myTank, dir)) return dir;
+
+        // Fallback: just move away even if not perfectly safe
         foreach (var dir in candidates)
             if (CanMove(ctx, myTank, dir)) return dir;
 
@@ -87,14 +122,43 @@ public class ANSUBot : IPlayerBot
 
     private static Direction? SeekCover(ITurnContext ctx, ITank myTank)
     {
-        foreach (var dir in AllDirections())
-        {
-            int nx = NewX(myTank.X, dir), ny = NewY(myTank.Y, dir);
-            if (!InBounds(ctx, nx, ny)) continue;
-            if (GetTileType(ctx, nx, ny) == TileType.Tree && CanMove(ctx, myTank, dir))
-                return dir;
-        }
+        // Trees = 25% damage (best), Buildings = 50% damage (still better than 75% open)
+        foreach (var coverType in new[] { TileType.Tree, TileType.Building })
+            foreach (var dir in AllDirections())
+            {
+                int nx = NewX(myTank.X, dir), ny = NewY(myTank.Y, dir);
+                if (!InBounds(ctx, nx, ny)) continue;
+                if (GetTileType(ctx, nx, ny) == coverType && CanMove(ctx, myTank, dir))
+                    return dir;
+            }
         return null;
+    }
+
+    private static Direction? GetSidestep(ITurnContext ctx, ITank myTank, ITank enemy)
+    {
+        // Step perpendicular to the axis between us and the enemy
+        int dx = myTank.X - enemy.X;
+        int dy = enemy.Y - myTank.Y;
+
+        Direction[] candidates = (dx == 0)
+            ? new[] { Direction.East, Direction.West }
+            : (dy == 0)
+                ? new[] { Direction.North, Direction.South }
+                : new[] { Direction.East, Direction.West, Direction.North, Direction.South };
+
+        foreach (var dir in candidates)
+            if (CanMove(ctx, myTank, dir)) return dir;
+
+        return null;
+    }
+
+    private static bool EnemyAimedAtUs(ITank enemy, ITank me)
+    {
+        int sx = 0, sy = 0;
+        GetStep(enemy.TurretDirection, ref sx, ref sy);
+        for (int i = 1; i <= 6; i++)
+            if (enemy.X + sx * i == me.X && enemy.Y + sy * i == me.Y) return true;
+        return false;
     }
 
     private static Direction? GetAlignmentMove(ITurnContext ctx, ITank myTank, ITank target)
