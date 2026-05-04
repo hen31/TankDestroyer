@@ -39,6 +39,10 @@ public class DeonKevinBot : IPlayerBot
 
         turnContext.Fire();
         turnCount++;
+        if (turnCount > 50)
+        {
+            turnCount = 0;
+        }
     }
 
     private TurretDirection? GetTurretRotation(ITank ourTank, Direction? movementDirection, ITank target)
