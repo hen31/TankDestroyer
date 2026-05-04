@@ -23,7 +23,7 @@ public enum Direction
     /// </summary>
     East = 1,
     /// <summary>
-    /// Y - 1
+    /// Y + 1
     /// </summary>
     South = 2,
     /// <summary>
