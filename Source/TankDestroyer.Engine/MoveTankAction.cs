@@ -20,64 +20,79 @@ public class MoveTankAction : TankAction
             return false;
         }
 
-        switch (_moveDirection)
+        return _moveDirection switch
         {
-            case Direction.North:
-                if (tank.Y == 0)
-                {
-                    return false;
-                }
+            Direction.North => CheckNorth(game, tank),
+            Direction.South => CheckSouth(game, tank),
+            Direction.East => CheckEast(game, tank),
+            Direction.West => CheckWest(game, tank),
+            _ => false
+        };
+    }
 
-                if (!IsPassable(tank.X, tank.Y - 1, game))
-                {
-                    return false;
-                }
-
-                tank.Y -= 1;
-                return true;
-            case Direction.South:
-                if (tank.Y == game.World.Height - 1)
-                {
-                    return false;
-                }
-
-                if (!IsPassable(tank.X, tank.Y + 1, game))
-                {
-                    return false;
-                }
-
-
-                tank.Y += 1;
-                return true;
-            case Direction.East:
-                if (tank.X == game.World.Width - 1)
-                {
-                    return false;
-                }
-
-                if (!IsPassable(tank.X + 1, tank.Y, game))
-                {
-                    return false;
-                }
-
-                tank.X += 1;
-                return true;
-            case Direction.West:
-                if (tank.X == 0)
-                {
-                    return false;
-                }
-
-                if (!IsPassable(tank.X - 1, tank.Y, game))
-                {
-                    return false;
-                }
-
-                tank.X -= 1;
-                return true;
-            default:
-                return false;
+    private bool CheckWest(Game game, Tank tank)
+    {
+        if (tank.X == 0)
+        {
+            return false;
         }
+
+        if (!IsPassable(tank.X - 1, tank.Y, game))
+        {
+            return false;
+        }
+
+        tank.X -= 1;
+        return true;
+    }
+
+    private bool CheckEast(Game game, Tank tank)
+    {
+        if (tank.X == game.World.Width - 1)
+        {
+            return false;
+        }
+
+        if (!IsPassable(tank.X + 1, tank.Y, game))
+        {
+            return false;
+        }
+
+        tank.X += 1;
+        return true;
+    }
+
+    private bool CheckSouth(Game game, Tank tank)
+    {
+        if (tank.Y == game.World.Height - 1)
+        {
+            return false;
+        }
+
+        if (!IsPassable(tank.X, tank.Y + 1, game))
+        {
+            return false;
+        }
+
+
+        tank.Y += 1;
+        return true;
+    }
+
+    private bool CheckNorth(Game game, Tank tank)
+    {
+        if (tank.Y == 0)
+        {
+            return false;
+        }
+
+        if (!IsPassable(tank.X, tank.Y - 1, game))
+        {
+            return false;
+        }
+
+        tank.Y -= 1;
+        return true;
     }
 
     private bool IsPassable(int tankX, int tankY, Game game)
