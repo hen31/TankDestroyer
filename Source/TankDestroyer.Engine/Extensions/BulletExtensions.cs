@@ -10,22 +10,22 @@ public static class BulletExtensions
         var direction = new Vector2(0, 0);
         if (bullet.Direction.HasFlag(TurretDirection.North))
         {
-            direction += new Vector2(0, 1);
+            direction += new Vector2(0, -1);
         }
 
         if (bullet.Direction.HasFlag(TurretDirection.South))
         {
-            direction += new Vector2(0, -1);
+            direction += new Vector2(0, 1);
         }
 
         if (bullet.Direction.HasFlag(TurretDirection.West))
         {
-            direction += new Vector2(1, 0);
+            direction += new Vector2(-1, 0);
         }
 
         if (bullet.Direction.HasFlag(TurretDirection.East))
         {
-            direction += new Vector2(-1, 0);
+            direction += new Vector2(1, 0);
         }
         
         return direction;
