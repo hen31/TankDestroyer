@@ -1,4 +1,6 @@
-﻿namespace TankDestroyer.Engine;
+﻿using TankDestroyer.Engine.Objects;
+
+namespace TankDestroyer.Engine;
 
 public class GameTurn
 {
@@ -8,4 +10,5 @@ public class GameTurn
 
     public TankAction[] Actions { get; set; }
     public Bullet[] Bullets { get; set; }
+    public MunitionBox[] MunitionBoxes { get; set; }
 }

@@ -24,7 +24,7 @@ public class AmmoService(Game game) : IAmmoService
             range = (range + 1);
         }
 
-        foreach (var gameTank in _game.Tanks)
+        foreach (var gameTank in nonDestroyedTanks.OrderBy(t=>t.Ammo))
         {
             if (gameTank.Destroyed) continue;
 
@@ -47,6 +47,11 @@ public class AmmoService(Game game) : IAmmoService
             var random = new Random();
             var ammoLocation = possibleSpawns.ElementAt(random.Next(0, possibleSpawns.Count));
             _game.MunitionBoxes.Add(new MunitionBox(ammoLocation.X, ammoLocation.Y, averageAmmoDepletion));
+            
+            if (_game.MunitionBoxes.Count >= nonDestroyedTanks.Count)
+            {
+                return _game.MunitionBoxes.Count;
+            }
         }
         
         return _game.MunitionBoxes.Count;
@@ -74,7 +79,7 @@ public class AmmoService(Game game) : IAmmoService
 
             for (var x = 0; x < gameTankIllegalXRange.Count; x++)
             {
-                for (var y = 0; y < gameTankIllegalYRange.Count; x++)
+                for (var y = 0; y < gameTankIllegalYRange.Count; y++)
                 {
                     if (location.X == x && location.Y == y)
                     {

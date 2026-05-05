@@ -19,4 +19,5 @@ public class FakeTank(
     public bool Destroyed { get; } = destroyed;
     public bool Fired { get; } = fired;
     public int OwnerId { get; } = ownerId;
+    public int Ammo { get; } = 0;
 }

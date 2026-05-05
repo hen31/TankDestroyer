@@ -17,6 +17,7 @@ public class Game
             var spawnPoint = World.SpawnPoints[i];
             Tanks[i].X = (int)spawnPoint.X;
             Tanks[i].Y = (int)spawnPoint.Y;
+            Tanks[i].Ammo = 10;
         }
     }
 

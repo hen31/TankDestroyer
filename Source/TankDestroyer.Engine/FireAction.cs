@@ -32,6 +32,7 @@ public class FireAction : TankAction
         };
         tank.Fired = true;
         game.Bullets.Add(bullet);
+        tank.Ammo--;
         return true;
     }
 }

@@ -2,6 +2,7 @@ using TankDestroyer.API;
 using TankDestroyer.Engine;
 using Spectre.Console;
 using System.Text;
+using TankDestroyer.ConsoleApp.Extensions;
 
 namespace TankDestroyer.ConsoleApp;
 
@@ -120,6 +121,15 @@ public class ConsoleRenderer
                     {
                          sb.Append(GetTileMarkup(world.GetTile(x, y).TileType));
                     }
+                    continue;
+                }
+                
+                
+                var ammoBox = turn.MunitionBoxes.FirstOrDefault(b => b.X == x && b.Y == y);
+                if (ammoBox != null)
+                {
+                    var color = Color.RosyBrown;
+                    sb.Append($"[{color.ToMarkup()}]{ammoBox.GetAscii()} [/]");
                     continue;
                 }
 

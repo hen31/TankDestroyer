@@ -2,16 +2,18 @@ using TankDestroyer.API.Objects;
 
 namespace TankDestroyer.Engine.Objects;
 
-public class MunitionBox : IMunitionBox
+public class MunitionBox(int x, int y, int amount = 10) : IMunitionBox
 {
-    public int Amount { get; set; }
-    public int X { get; set; }
-    public int Y { get; set; }
+    public int Amount { get; set; } = amount;
+    public int X { get; set; } = x;
+    public int Y { get; set; } = y;
 
-    public MunitionBox(int x, int y, int amount = 10)
+    public MunitionBox Clone()
     {
-        Amount = amount;
-        X = x;
-        Y = y;
+        return new MunitionBox(
+            X = X,
+            Y = Y,
+            Amount = Amount
+        );
     }
 }
