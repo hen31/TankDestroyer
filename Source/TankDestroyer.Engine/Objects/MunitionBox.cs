@@ -2,7 +2,7 @@ using TankDestroyer.API.Objects;
 
 namespace TankDestroyer.Engine.Objects;
 
-public class Munition : IMunitionBox
+public class MunitionBox : IMunitionBox
 {
     public int Amount { get; set; }
     public int X { get; set; }
