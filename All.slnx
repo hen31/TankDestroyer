@@ -9,9 +9,7 @@
     </Project>
     <Project Path="Bots/Apex.Bot/Apex.Bot.csproj" />
     <Project Path="Bots/DOA.Bot/DOA.Bot.csproj" />
-    <Project Path="Bots/Example.Bot/Example.Bot.csproj">
-         <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
-    </Project>
+
     <Project Path="Bots/GarbageCollector.Bot/GarbageCollector.Bot.csproj" />
     <Project Path="Bots/HDJO.Bot/HDJO.Bot.csproj">
          <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
@@ -75,7 +73,6 @@
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
   </Folder>
-  <Project Path="ShitBot.Bot/ShitBot.Bot.csproj" />
   <Project Path="TankDestroyer.Game.Console/TankDestroyer.Game.Console.csproj">
     <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     <BuildDependency Project="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj" />
