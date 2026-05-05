@@ -13,6 +13,7 @@ public class Tank : ITank
     public int Y { get; set; }
     public int Health { get; set; } = 100;
     public int OwnerId { get; set; }
+    public int Ammo { get; set; }
     public TurretDirection TurretDirection { get; set; } = TurretDirection.North;
     public bool Destroyed { get; set; }
     public bool Fired { get; set; }

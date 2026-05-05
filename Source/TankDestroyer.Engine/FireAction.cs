@@ -17,6 +17,11 @@ public class FireAction : TankAction
             return false;
         }
 
+        if (tank.Ammo == 0)
+        {
+            return false;
+        }
+
         Bullet bullet = new(tank.OwnerId)
         {
             X = tank.X,
