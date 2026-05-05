@@ -301,4 +301,3 @@ public class ApexBot : IPlayerBot
         public double Score;
     }
 }
-	
