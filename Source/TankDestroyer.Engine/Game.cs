@@ -1,4 +1,5 @@
 ﻿using TankDestroyer.API;
+using TankDestroyer.Engine.Objects;
 
 namespace TankDestroyer.Engine;
 
@@ -26,4 +27,5 @@ public class Game
     public List<GameTurn> Turns { get; set; } = new();
 
     public List<Bullet> Bullets { get; set; } = new();
+    public List<MunitionBox> MunitionBoxes { get; set; } = [];
 }
