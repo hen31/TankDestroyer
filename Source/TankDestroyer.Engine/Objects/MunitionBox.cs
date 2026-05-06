@@ -1,3 +1,4 @@
+using TankDestroyer.API;
 using TankDestroyer.API.Objects;
 
 namespace TankDestroyer.Engine.Objects;
@@ -19,4 +20,26 @@ public class MunitionBox : IMunitionBox
     public int X { get; set; }
     public int Y { get; set; }
     public MunitionBox Clone() => new MunitionBox(X, Y, Amount) { Id = Id };
+    public bool IsPickedup { get; private set; } =  false;
+
+    public void PickUpBy(Tank tank)
+    {
+        if (!(tank.X == X && tank.Y == Y))
+        {
+            return;
+        }
+
+        var maximumAdd = tank.MaxAmmo - tank.Ammo;
+
+        if (Amount > maximumAdd)
+        {
+            tank.Ammo += maximumAdd;
+        }
+        else
+        {
+            tank.Ammo += Amount;
+        }
+        
+        IsPickedup = true;
+    }
 }

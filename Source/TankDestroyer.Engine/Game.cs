@@ -18,6 +18,7 @@ public class Game
             Tanks[i].X = (int)spawnPoint.X;
             Tanks[i].Y = (int)spawnPoint.Y;
             Tanks[i].Ammo = 10;
+            Tanks[i].MaxAmmo = 10;
         }
     }
 

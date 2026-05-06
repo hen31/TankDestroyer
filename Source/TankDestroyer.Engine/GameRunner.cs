@@ -78,6 +78,7 @@ public class GameRunner
         turn.Actions = turnActions.ToArray();
         turn.Bullets = _game.Bullets.Select(c => c.Clone()).ToArray();
         turn.Turn = _game.Turns.Last().Turn + 1;
+        _ammoService.PickupAmmo(turn);
         _ammoService.SpawnAmmo(5);
         turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray();
         _game.Turns.Add(turn);

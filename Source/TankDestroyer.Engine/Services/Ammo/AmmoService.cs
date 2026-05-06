@@ -10,7 +10,7 @@ public class AmmoService(Game game) : IAmmoService
     public int SpawnAmmo(int range)
     {
         var nonDestroyedTanks = _game.Tanks.Where(tank => !tank.Destroyed).ToList();
-        
+
         if (_game.MunitionBoxes.Count >= nonDestroyedTanks.Count)
         {
             return _game.MunitionBoxes.Count;
@@ -18,25 +18,31 @@ public class AmmoService(Game game) : IAmmoService
 
         var averageAmmoDepletion = (int)Math.Ceiling(nonDestroyedTanks.Select(t => 10 - t.Ammo).Average());
 
+        if (averageAmmoDepletion >= _game.MunitionBoxes.Count) return _game.MunitionBoxes.Count;
+        
         var even = range % 2 == 0;
         if (!even)
         {
             range = (range + 1);
         }
 
-        foreach (var gameTank in nonDestroyedTanks.OrderBy(t=>t.Ammo))
+        foreach (var gameTank in nonDestroyedTanks.OrderBy(t => t.Ammo))
         {
             if (gameTank.Destroyed) continue;
 
-            var spawnXRange = Enumerable.Range(gameTank.X - range / 2, gameTank.X + range / 2).ToList();
-            var spawnYRange = Enumerable.Range(gameTank.Y - range / 2, gameTank.Y + range / 2).ToList();
+            var spawnXRange = Enumerable.Range(gameTank.X - range / 2, range + 1)
+                .Where(n => n >= 0 && n < _game.World.Width)
+                .ToList();
+            var spawnYRange = Enumerable.Range(gameTank.Y - range / 2, range + 1)
+                .Where(n => n >= 0 && n < _game.World.Height)
+                .ToList();
             var possibleSpawns = new List<Location>();
 
             for (var x = 0; x < spawnXRange.Count; x++)
             {
                 for (var y = 0; y < spawnYRange.Count; y++)
                 {
-                    var location = new Location(x, y);
+                    var location = new Location(spawnXRange.ElementAt(x), spawnYRange.ElementAt(y));
                     if (!IsLocationIllegal(location))
                     {
                         possibleSpawns.Add(location);
@@ -47,14 +53,32 @@ public class AmmoService(Game game) : IAmmoService
             var random = new Random();
             var ammoLocation = possibleSpawns.ElementAt(random.Next(0, possibleSpawns.Count));
             _game.MunitionBoxes.Add(new MunitionBox(ammoLocation.X, ammoLocation.Y, averageAmmoDepletion));
-            
+
             if (_game.MunitionBoxes.Count >= nonDestroyedTanks.Count)
             {
                 return _game.MunitionBoxes.Count;
             }
         }
-        
+
         return _game.MunitionBoxes.Count;
+    }
+
+    public void PickupAmmo(GameTurn turn)
+    {
+        var ammoBoxes = turn.MunitionBoxes;
+
+        foreach (var tank in turn.Tanks.Where(tank => !tank.Destroyed).OrderBy(tank => tank.Ammo))
+        {
+            var ammo = ammoBoxes
+                .Where(ammo => !ammo.IsPickedup)
+                .FirstOrDefault(ammo => ammo.X == tank.X && ammo.Y == tank.Y);
+
+            if (ammo == null) continue;
+            
+            ammo.PickUpBy(tank);
+            
+            _game.MunitionBoxes.Remove(ammo);
+        }
     }
 
     private bool IsLocationIllegal(Location location)
