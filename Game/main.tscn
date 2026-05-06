@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://crx88anhjpm17" path="res://WorldNode.cs" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://c86mrhqa6hs6p" path="res://RtsCameraController.cs" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://dhcuq7ltx2385" path="res://Tank.tscn" id="2_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://wrty0lav5nqy" path="res://Ammo.tscn" id="3_2cqfq"]
 [ext_resource type="PackedScene" uid="uid://dhnlwonhptx5o" path="res://bullet.tscn" id="3_lquwl"]
 [ext_resource type="PackedScene" uid="uid://dj3wjvy1hoqn4" path="res://tree.tscn" id="5_4c57u"]
 [ext_resource type="Texture2D" uid="uid://od3j2ld1u6fv" path="res://beach+sand.jpg" id="5_7mycd"]
@@ -131,12 +132,14 @@ bg_color = Color(0.14117648, 0.14117648, 0.14117648, 0.73333335)
 
 [node name="Node3D" type="Node3D" unique_id=71573495]
 
-[node name="Game" type="Node" parent="." unique_id=1041487807 node_paths=PackedStringArray("WorldNode", "TankContainer", "BulletContainer")]
+[node name="Game" type="Node" parent="." unique_id=1041487807 node_paths=PackedStringArray("WorldNode", "TankContainer", "AmmoContainer", "BulletContainer")]
 script = ExtResource("1_h2yge")
 WorldNode = NodePath("../World")
 TankScene = ExtResource("2_1bvp3")
+AmmoScene = ExtResource("3_2cqfq")
 BulletScene = ExtResource("3_lquwl")
 TankContainer = NodePath("../Tanks")
+AmmoContainer = NodePath("../AmmoBoxes")
 BulletContainer = NodePath("../Bullets")
 
 [node name="World" type="Node3D" parent="." unique_id=2112774718 node_paths=PackedStringArray("GridMap")]
@@ -324,3 +327,5 @@ text = "Players"
 layout_mode = 2
 theme_override_constants/h_separation = 10
 columns = 3
+
+[node name="AmmoBoxes" type="Node3D" parent="." unique_id=2096153517]
