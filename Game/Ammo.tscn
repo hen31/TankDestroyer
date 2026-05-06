@@ -1,15 +1,13 @@
 [gd_scene format=3 uid="uid://wrty0lav5nqy"]
 
 [ext_resource type="Script" uid="uid://dugh4ws303sbn" path="res://AmmoNode.cs" id="1_ji6dm"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_pj33l"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mvkeb"]
+[ext_resource type="ArrayMesh" uid="uid://dr8m8t5264i13" path="res://Ammo/Ammo_1.obj" id="2_mvkeb"]
+[ext_resource type="Material" path="res://Ammo/Wood030_1K-JPG.tres" id="3_ptyfq"]
 
 [node name="Ammo" type="Node3D" unique_id=2038890436]
 script = ExtResource("1_ji6dm")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=820967612]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-mesh = SubResource("CylinderMesh_pj33l")
-surface_material_override/0 = SubResource("StandardMaterial3D_mvkeb")
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.6, 0)
+mesh = ExtResource("2_mvkeb")
+surface_material_override/0 = ExtResource("3_ptyfq")
