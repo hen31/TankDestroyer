@@ -20,4 +20,5 @@ public class FakeTank(
     public bool Fired { get; } = fired;
     public int OwnerId { get; } = ownerId;
     public int Ammo { get; } = 0;
+    public int MaxAmmo { get; }
 }
