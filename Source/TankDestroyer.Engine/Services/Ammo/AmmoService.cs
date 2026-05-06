@@ -10,16 +10,13 @@ public class AmmoService(Game game) : IAmmoService
     public int SpawnAmmo(int range)
     {
         var nonDestroyedTanks = _game.Tanks.Where(tank => !tank.Destroyed).ToList();
-
-        if (_game.MunitionBoxes.Count >= nonDestroyedTanks.Count)
-        {
-            return _game.MunitionBoxes.Count;
-        }
-
         var averageAmmoDepletion = (int)Math.Ceiling(nonDestroyedTanks.Select(t => 10 - t.Ammo).Average());
 
-        if (averageAmmoDepletion >= _game.MunitionBoxes.Count) return _game.MunitionBoxes.Count;
+        var averageAmmo = nonDestroyedTanks.Select(t => t.Ammo).Average();
+        var maxBoxes = nonDestroyedTanks.Count; 
         
+        if (averageAmmo > 5 || _game.MunitionBoxes.Count >= maxBoxes) return _game.MunitionBoxes.Count;
+  
         var even = range % 2 == 0;
         if (!even)
         {
@@ -49,6 +46,8 @@ public class AmmoService(Game game) : IAmmoService
                     }
                 }
             }
+            
+            if (possibleSpawns.Count == 0) continue;
 
             var random = new Random();
             var ammoLocation = possibleSpawns.ElementAt(random.Next(0, possibleSpawns.Count));
@@ -70,14 +69,21 @@ public class AmmoService(Game game) : IAmmoService
         foreach (var tank in turn.Tanks.Where(tank => !tank.Destroyed).OrderBy(tank => tank.Ammo))
         {
             var ammo = ammoBoxes
-                .Where(ammo => !ammo.IsPickedup)
+                .Where(ammo => !ammo.IsPickedUp)
                 .FirstOrDefault(ammo => ammo.X == tank.X && ammo.Y == tank.Y);
-
+            
             if (ammo == null) continue;
             
-            ammo.PickUpBy(tank);
+            var realTank = _game.Tanks.FirstOrDefault(t => t.OwnerId == tank.OwnerId);
+            if (realTank == null) continue;
             
-            _game.MunitionBoxes.Remove(ammo);
+            ammo.PickUpBy(realTank);
+           
+            var original = _game.MunitionBoxes.FirstOrDefault(m => m.Id == ammo.Id);
+            if (original != null)
+            {
+                _game.MunitionBoxes.Remove(original);
+            }
         }
     }
 

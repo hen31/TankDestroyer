@@ -16,6 +16,7 @@ material = ExtResource("1_120f5")
 
 [node name="Explosion1" type="GPUParticles3D" unique_id=688844572]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+emitting = false
 amount = 20
 lifetime = 2.13
 one_shot = true

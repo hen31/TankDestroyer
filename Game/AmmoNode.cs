@@ -17,6 +17,5 @@ public partial class AmmoNode : Node3D
 
 	public void Update()
 	{
-		
 	}
 }

@@ -1,4 +1,4 @@
 {
-  "BotFolder": "..\\Build\\Bots",
+  "BotFolder": ".\\Bots",
   "MapFolder": "..\\Maps"
 }

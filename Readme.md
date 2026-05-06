@@ -61,4 +61,6 @@ Maak je eigen bot en maak een PR naar de hoofdtak.
 - Een kogel kan niet geschoten worden uit een boom tegel
 - Een kogel kan wel worden geschoten uit een gebouw tegel
 - Een kogel gaat niet door een boom of gebouw tegel heen
-
+- Kogels zijn gelimiteert tot 10, als deze op zijn zal er niet meer geschoten worden
+- Als het gemiddelde aantal kogels onder 5 zakt zal er ammo gespawnt worden beginnende bij de speler met de minste ammo
+- Ammo word gespawnt op een tile die volledig vrij is in het open

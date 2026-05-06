@@ -76,8 +76,14 @@ public partial class GameNode : Node
 
 	public void DoTurn()
 	{
+		GD.Print("DoTurn aangeroepen");
+		GD.Print($"Current turn: {_currentTurn}, Last turn: {_gameRunner.GetTurns().Last()}");
+
+		
+		
 		if (_currentTurn == _gameRunner.GetTurns().Last())
 		{
+			GD.Print("Nieuwe turn berekenen...");
 			_gameRunner.DoTurn();
 
 			var nextTurn = _gameRunner.GetTurns().Last();
@@ -124,7 +130,7 @@ public partial class GameNode : Node
 			bulletNode.Deleted = bullet.Destroyed;
 			bulletNode.UpdateLocation(true);
 		}
-		
+
 		AmmoContainer.RemoveAndClearChilderen();
 
 		var ammoBoxes = gameTurn.MunitionBoxes;
@@ -213,9 +219,18 @@ public partial class GameNode : Node
 
 	private void UpdateAmmoBoxes()
 	{
+		if (AmmoScene == null) return;
+		
 		var ammoNodes = AmmoContainer.GetChildren().OfType<AmmoNode>().ToArray();
 		var ammoBoxes = _currentTurn.MunitionBoxes;
-		var newAmmoNodes = new List<AmmoNode>();
+
+		foreach (var ammoNode in ammoNodes)
+		{
+			if (ammoBoxes.All(c => c.Id != ammoNode.MunitionBox.Id))
+			{
+				AmmoContainer.RemoveChild(ammoNode);
+			}
+		}
 
 		foreach (var munitionBox in ammoBoxes)
 		{
@@ -225,19 +240,12 @@ public partial class GameNode : Node
 			var ammoNode = AmmoScene.Instantiate<AmmoNode>();
 			ammoNode.MunitionBox = munitionBox;
 			AmmoContainer.AddChild(ammoNode);
-			ammoNode.GlobalPosition =
-				new Vector3((munitionBox.X * 2f) + 1f, 1f, munitionBox.Y * 2f + 1f);
-			ammoNode.Visible = false;
-			newAmmoNodes.Add(ammoNode);
-		}
-
-
-		_ammoBoxes = AmmoContainer.GetChildren().OfType<AmmoNode>().ToArray();
-		
-		foreach (var ammoNode in _ammoBoxes)
-		{
+			ammoNode.GlobalPosition = new Vector3((munitionBox.X * 2f) + 1f, 1f, munitionBox.Y * 2f + 1f);
+			ammoNode.Visible = true;
 			ammoNode.Update();
 		}
+		
+		_ammoBoxes = AmmoContainer.GetChildren().OfType<AmmoNode>().ToArray();
 	}
 
 	private double _timeElapsed = 0f;

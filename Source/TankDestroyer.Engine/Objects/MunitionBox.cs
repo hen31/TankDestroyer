@@ -10,7 +10,7 @@ public class MunitionBox : IMunitionBox
         X = x;
         Y = y;
         Amount = amount;
-        _globalId++;
+        Id = _globalId++;
     }
 
     private static uint _globalId = 0;
@@ -20,7 +20,7 @@ public class MunitionBox : IMunitionBox
     public int X { get; set; }
     public int Y { get; set; }
     public MunitionBox Clone() => new MunitionBox(X, Y, Amount) { Id = Id };
-    public bool IsPickedup { get; private set; } =  false;
+    public bool IsPickedUp { get; private set; } =  false;
 
     public void PickUpBy(Tank tank)
     {
@@ -40,6 +40,6 @@ public class MunitionBox : IMunitionBox
             tank.Ammo += Amount;
         }
         
-        IsPickedup = true;
+        IsPickedUp = true;
     }
 }
