@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dugh4ws303sbn" path="res://AmmoNode.cs" id="1_ji6dm"]
 [ext_resource type="ArrayMesh" uid="uid://dr8m8t5264i13" path="res://Ammo/Ammo_1.obj" id="2_mvkeb"]
-[ext_resource type="Material" path="res://Ammo/Wood030_1K-JPG.tres" id="3_ptyfq"]
+[ext_resource type="Material" uid="uid://bpx25pyn6cyxo" path="res://Ammo/Wood030_1K-JPG.tres" id="3_ptyfq"]
 
 [node name="Ammo" type="Node3D" unique_id=2038890436]
 script = ExtResource("1_ji6dm")

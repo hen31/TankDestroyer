@@ -1,7 +1,16 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://bpx25pyn6cyxo"]
 
+[ext_resource type="Texture2D" uid="uid://d37c3vifeyi2i" path="res://Ammo/Wood030_1K-JPG_Color.jpg" id="Color"]
+[ext_resource type="Texture2D" uid="uid://cbn7plgkaxt2g" path="res://Ammo/Wood030_1K-JPG_Displacement.jpg" id="Displacement"]
+[ext_resource type="Texture2D" uid="uid://bx6v0spdf8cvx" path="res://Ammo/Wood030_1K-JPG_NormalGL.jpg" id="NormalGL"]
+[ext_resource type="Texture2D" uid="uid://dy8vamf35ir80" path="res://Ammo/Wood030_1K-JPG_Roughness.jpg" id="Roughness"]
+
 [resource]
+albedo_texture = ExtResource("Color")
+roughness_texture = ExtResource("Roughness")
 roughness_texture_channel = 4
 normal_enabled = true
+normal_texture = ExtResource("NormalGL")
 heightmap_enabled = true
 heightmap_scale = 1.0
+heightmap_texture = ExtResource("Displacement")
