@@ -76,14 +76,8 @@ public partial class GameNode : Node
 
 	public void DoTurn()
 	{
-		GD.Print("DoTurn aangeroepen");
-		GD.Print($"Current turn: {_currentTurn}, Last turn: {_gameRunner.GetTurns().Last()}");
-
-		
-		
 		if (_currentTurn == _gameRunner.GetTurns().Last())
 		{
-			GD.Print("Nieuwe turn berekenen...");
 			_gameRunner.DoTurn();
 
 			var nextTurn = _gameRunner.GetTurns().Last();
