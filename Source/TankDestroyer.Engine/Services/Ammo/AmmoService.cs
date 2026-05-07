@@ -10,8 +10,7 @@ public class AmmoService(Game game) : IAmmoService
     public int SpawnAmmo(int range)
     {
         var nonDestroyedTanks = _game.Tanks.Where(tank => !tank.Destroyed).ToList();
-        var averageAmmoDepletion = (int)Math.Ceiling(nonDestroyedTanks.Select(t => 10 - t.Ammo).Average());
-
+     
         var averageAmmo = nonDestroyedTanks.Select(t => t.Ammo).Average();
         var maxBoxes = nonDestroyedTanks.Count; 
         
@@ -51,7 +50,7 @@ public class AmmoService(Game game) : IAmmoService
 
             var random = new Random();
             var ammoLocation = possibleSpawns.ElementAt(random.Next(0, possibleSpawns.Count));
-            _game.MunitionBoxes.Add(new MunitionBox(ammoLocation.X, ammoLocation.Y, averageAmmoDepletion));
+            _game.MunitionBoxes.Add(new MunitionBox(ammoLocation.X, ammoLocation.Y));
 
             if (_game.MunitionBoxes.Count >= nonDestroyedTanks.Count)
             {
