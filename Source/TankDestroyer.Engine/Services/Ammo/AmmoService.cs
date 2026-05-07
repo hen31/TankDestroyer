@@ -23,7 +23,7 @@ public class AmmoService(Game game) : IAmmoService
             range = (range + 1);
         }
 
-        foreach (var gameTank in nonDestroyedTanks.OrderBy(t => t.Ammo))
+        foreach (var gameTank in nonDestroyedTanks.OrderByDescending(DistanceToClosestAmmo))
         {
             if (gameTank.Destroyed) continue;
 
@@ -102,6 +102,11 @@ public class AmmoService(Game game) : IAmmoService
             return true;
         }
 
+        if (_game.MunitionBoxes.Any(ammo => ammo.X == location.X && ammo.Y == location.Y))
+        {
+            return true;
+        }
+
         foreach (var gameTank in _game.Tanks)
         {
             var gameTankIllegalXRange = Enumerable.Range(gameTank.X - 1, 3).ToList();
@@ -111,7 +116,7 @@ public class AmmoService(Game game) : IAmmoService
             {
                 for (var y = 0; y < gameTankIllegalYRange.Count; y++)
                 {
-                    if (location.X == x && location.Y == y)
+                    if (location.X == gameTankIllegalXRange.ElementAt(x) && location.Y == gameTankIllegalYRange.ElementAt(y))
                     {
                         return true;
                     }
@@ -121,5 +126,22 @@ public class AmmoService(Game game) : IAmmoService
 
 
         return false;
+    }
+
+    private int DistanceToClosestAmmo(Tank tank)
+    {
+        var closest = int.MaxValue;
+
+        foreach (var ammo in _game.MunitionBoxes)
+        {
+            var location = Math.Abs(ammo.X - tank.X) + Math.Abs(ammo.Y - tank.Y);
+
+            if (location <= closest)
+            {
+                closest = location;
+            }
+        }
+
+        return closest;
     }
 }

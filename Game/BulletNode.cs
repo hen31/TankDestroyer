@@ -31,7 +31,7 @@ public partial class BulletNode : Node3D
 					_tween.TweenProperty(this, "global_position",
 						target,
 						(double)(target.DistanceTo(GlobalPosition) / (5f * 2f)) * GetTree().GetGameNode().GameSpeed *
-						0.1f);
+						0.2f);
 					if (Bullet.Explode)
 					{
 						_tween.TweenCallback(Callable.From(SpawnExplosion));
