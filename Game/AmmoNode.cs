@@ -16,7 +16,7 @@ public partial class AmmoNode : Node3D
 	{
 		_startY ??= GlobalPosition.Y;
 		_time += (float)delta;
-		RotateY((float)delta * 2f);
+		RotateY((float)delta * 1.5f);
 		GlobalPosition = GlobalPosition with { Y = _startY.Value + MathF.Sin(_time * 2f) * 0.2f };
 	}
 	
