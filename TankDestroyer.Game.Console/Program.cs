@@ -1,17 +1,18 @@
-using Spectre.Console;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Spectre.Console;
 using TankDestroyer.API;
+using TankDestroyer.ConsoleApp;
 using TankDestroyer.Engine;
 
-namespace TankDestroyer.ConsoleApp;
+namespace TankDestroyer.Console;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        Console.OutputEncoding = Encoding.UTF8;
+        System.Console.OutputEncoding = Encoding.UTF8;
         AnsiConsole.Cursor.Hide();
 
         try
