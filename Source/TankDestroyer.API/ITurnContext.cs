@@ -1,4 +1,6 @@
-﻿namespace TankDestroyer.API;
+﻿using TankDestroyer.API.Objects;
+
+namespace TankDestroyer.API;
 
 public interface ITurnContext
 {
@@ -10,6 +12,7 @@ public interface ITurnContext
     ITank[] GetTanks();
 
     IBullet[] GetBullets();
+    IMunitionBox[] GetAmmoBoxes();
     public ITank Tank { get; set; }
     public void MoveTank(Direction direction);
     public void RotateTurret(TurretDirection direction);

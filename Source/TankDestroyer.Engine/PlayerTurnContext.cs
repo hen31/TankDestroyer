@@ -1,4 +1,5 @@
 ﻿using TankDestroyer.API;
+using TankDestroyer.API.Objects;
 
 namespace TankDestroyer.Engine;
 
@@ -28,6 +29,10 @@ public class PlayerTurnContext : ITurnContext
     public IBullet[] GetBullets() => _game.Bullets
         .Where(c => c.Destroyed == false)
         .ToArray<IBullet>();
+
+    public IMunitionBox[] GetAmmoBoxes() => _game.MunitionBoxes
+        .Where(a=>!a.IsPickedUp)
+        .ToArray<IMunitionBox>();
 
     public ITank Tank { get; set; }
 
