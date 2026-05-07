@@ -48,27 +48,34 @@ public partial class TankNode : Node3D
 
     public void CorrectTurretRotation()
     {
-        var targetRotation = DetermineRotation();
+        var targetRotation = Tank.TurretDirection.Get3DVector();
         if (TurretNode.GlobalRotationDegrees.EqualsWithMargin(targetRotation))
         {
             if (Tank.Fired)
-            {
                 PlayMuzzleFlash();
-            }
-
             return;
         }
+        
+        var currentY = TurretNode.GlobalRotationDegrees.Y;
+        var targetY = targetRotation.Y;
+
+        var diff = targetY - currentY;
+        if (diff > 180f) diff -= 360f;
+        if (diff < -180f) diff += 360f;
+
+        var shortestTargetY = currentY + diff;
 
         _rotateTween?.Kill();
         _rotateTween = GetTree().CreateTween();
-        _rotateTween.TweenProperty(this.TurretNode, "global_rotation_degrees",
-            new Vector3(0, targetRotation.Y, 0), GetTree().GetGameNode().GameSpeed * 0.9f);
+        _rotateTween.TweenProperty(TurretNode, "global_rotation_degrees",
+            new Vector3(0, shortestTargetY, 0), GetTree().GetGameNode().GameSpeed * 0.9f);
         _rotateTween.TweenCallback(Callable.From(() =>
         {
-            if (Tank.Fired)
-            {
-                PlayMuzzleFlash();
-            }
+            var normalized = TurretNode.GlobalRotationDegrees;
+            normalized.Y = Mathf.Wrap(normalized.Y, -180f, 180f);
+            TurretNode.GlobalRotationDegrees = normalized;
+
+            if (Tank.Fired) PlayMuzzleFlash();
         }));
     }
 
@@ -77,7 +84,7 @@ public partial class TankNode : Node3D
         MuzzleFlash.Call("play");
     }
 
-    public float Difference(float targetAngle)
+    private float Difference(float targetAngle)
     {
         var angle = Mathf.Abs(targetAngle);
         if (angle > 180.0)
