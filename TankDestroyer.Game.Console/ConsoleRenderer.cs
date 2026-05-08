@@ -1,10 +1,10 @@
-using TankDestroyer.API;
-using TankDestroyer.Engine;
-using Spectre.Console;
 using System.Text;
+using Spectre.Console;
+using TankDestroyer.API;
 using TankDestroyer.ConsoleApp.Extensions;
+using TankDestroyer.Engine;
 
-namespace TankDestroyer.ConsoleApp;
+namespace TankDestroyer.Console;
 
 public class ConsoleRenderer
 {

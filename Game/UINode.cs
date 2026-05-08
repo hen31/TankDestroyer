@@ -6,6 +6,7 @@ using System.Reflection;
 using Godot;
 using TankDestroyer.API;
 using TankDestroyer.Engine;
+using TankDestroyer.Engine.Services.Instantiate;
 
 namespace TankDestroyer;
 
@@ -29,13 +30,16 @@ public partial class UINode : Control
 
     public int PlayerCount { get; set; }
     private Dictionary<int, Label> _tankHealthMapping = new();
+    private readonly ICollectBotService _collectBotService = new CollectBotsService();
+    private readonly ICollectMapsService _collectMapsService = new CollectMapsService();
+
 
     public override void _Ready()
     {
         ConfigFile file =
             System.Text.Json.JsonSerializer.Deserialize<ConfigFile>(System.IO.File.ReadAllText("config.json"));
-        BotTypes = CollectBotsServices.LoadBots(Path.GetFullPath(file.BotFolder));
-        Maps = CollectMapsService.LoadMaps(Path.GetFullPath(file.MapFolder));
+        BotTypes = _collectBotService.LoadBots(Path.GetFullPath(file.BotFolder));
+        Maps = _collectMapsService.LoadMaps(Path.GetFullPath(file.MapFolder));
         base._Ready();
         MapButton.AddItem("Random generated", 0);
         for (int i = 0; i < Maps.Length; i++)

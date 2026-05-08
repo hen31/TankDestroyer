@@ -1,8 +1,8 @@
-﻿namespace TankDestroyer.Engine;
+﻿namespace TankDestroyer.Engine.Services.Instantiate;
 
-public class CollectMapsService
+public class CollectMapsService: ICollectMapsService
 {
-    public static World[] LoadMaps(string folder)
+    public  World[] LoadMaps(string folder)
     {
         List<World> worlds = new();
         foreach (var filePath in Directory.EnumerateFiles(folder, "*.map"))
